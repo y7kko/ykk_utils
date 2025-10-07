@@ -138,7 +138,7 @@ class ykkEDC:
         if init_time is None:
             if start == None:
                 start = -5
-            end = start - 20
+            end = start - n
 
             indexes = np.where((EDC<=start) & (EDC>=end))
             # a*x + b

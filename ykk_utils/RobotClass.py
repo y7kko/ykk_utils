@@ -7,32 +7,9 @@ Module to control the scanner during sequential impulse response measurements
 @author: ericb
 """
 
-
 # general imports
-import sys
 import os
-from pathlib import Path
 import time
-import pickle
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-import scipy.io as io
-from scipy.signal import windows, resample, chirp, correlate
-from datetime import datetime
-
-# Pytta imports
-import pytta
-# from pytta.generate import sweep
-# from pytta.classes import SignalObj, FRFMeasure
-# from pytta import ImpulsiveResponse, save, merge
-from ni_measurement import NIMeasurement
-try:
-    from src.lanxi_measurement import LANXIMeasurement
-except:
-    print("Not possible to use LANXI in this environment.")
 
 # Arduino imports
 from telemetrix import telemetrix

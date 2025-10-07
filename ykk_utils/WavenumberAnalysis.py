@@ -1,12 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from controlsair import AirProperties, AlgControls,cart2sph
 from decompositionclass import Decomposition
 from .FractionalBands import ThirdOctaveBands,OctaveBands
 import matplotlib.patheffects as PathEffects
 
-class DecompOps:
+class WavenumberAnalysis:
     def __init__(self, decomp_obj:Decomposition, travel=True, ymirror=False):
         """Classe utilizada para realizar operações com a decomposição em ondas planas
 
@@ -23,6 +22,7 @@ class DecompOps:
         self.pk = decomp_obj.pk
         self.freq = decomp_obj.controls.freq
 
+
     def change_travel(self,travel: bool):
         """Alterna entre direção de propagação e direção de chegada
 
@@ -34,7 +34,10 @@ class DecompOps:
             self.travel =  not self.travel
             self.dir[:,2] *= -1
 
-    def plot_map(self, dinrange=20,freq=1000,kind='oct',decibel=True,**kwargs):
+
+    def plot_map(self, 
+                 dinrange=20,freq=1000,kind='oct',decibel=True,
+                 fig=None,colorbar=True,projection='hammer',ax=None,title=True):
         """Realiza o plot do mapa em projeção cartográfica (Hammer)
 
         Args:
@@ -47,47 +50,112 @@ class DecompOps:
                                     Defaults to 'oct'.
         """
         freq_idx, freq = self._get_freq_idx(freq, kind)
+        
+        if fig is None:
+            fig = plt.gcf()
+        if ax is None:
+            ax = plt.axes(projection = projection)
 
         pk = self._pk_mean(freq_idx)
         pk = abs(pk)/ max(abs(pk))
         if decibel:
             pk = 20*np.log10(pk)
-        # pk = self._pk_calc(freq,kind)
+
         dir = self.dir
         
-        plt_refs = PlotRoutines.plot_map(
+        pc = PlotRoutines.plot_map(
                         dir = dir,
                         p = pk,
-                        dinrange = dinrange,
-                        projection="hammer",
-                        return_current=True,
-                        **kwargs
+                        ax=ax
                         )
-        
-        plt.title(f"|P(k)| - {freq:.2f} Hz - kind: {kind} - Travel: {self.travel}",pad=20)
-        return plt_refs
+
+        if decibel:
+            pc.set_clim([-dinrange, 0])
+            colorbar_label = "Magnitude (dB)"
+        else:
+            if dinrange > 1:
+                Warning('dinrange está alto para p(k) linear')
+            pc.set_clim([0,dinrange])
+            colorbar_label = "Magnitude (-)"
 
         
-    def plot_sphere(self, dinrange=20, freq=1000, kind='oct', az=-60,elev=30,decibel=True,**kwargs):
-            freq_idx, freq = self._get_freq_idx(freq, kind)
-            
-            pk = self._pk_mean(freq_idx)
-            pk =abs(pk)/ max(abs(pk))
-            if decibel:
-                pk = 20*np.log10( pk)
+        if colorbar:
+            cbar = fig.colorbar(pc, orientation="horizontal", label=colorbar_label)
 
-            plt_refs = PlotRoutines.plot_sphere(
-                            dir=self.dir, 
-                            p=pk, 
-                            dinrange=dinrange, 
-                            az=az,
-                            elev=elev,
-                            return_current=True,
-                            **kwargs)
-            
-            plt.title(f'|P(k)| - {freq:.2f} Hz - kind: {kind} - Travel: {self.travel}',pad=20)
-            return plt_refs
+
+        if title:
+            plt.title(f"|P(k)| - {freq:.2f} Hz - kind: {kind} - Travel: {self.travel}",pad=20)
+
+        
+    def plot_sphere(self, dinrange=20, freq=1000, kind='oct',
+                    ax=None,fig=None, az=-60,elev=30,decibel=True,title=True):
+        freq_idx, freq = self._get_freq_idx(freq, kind)
+        
+        pk = self._pk_mean(freq_idx)
+        pk = abs(pk)/ max(abs(pk))
+        if fig is None:
+            fig = plt.gcf()
+        if ax is None:
+            ax = plt.axes(projection='3d')
+       
+        if decibel:
+            pk = 20*np.log10( pk)
+            vminmax = [-dinrange,0]
+            colorbar_label = "Magnitude (dB)"
+
+        else:
+            vminmax = [0,dinrange]
+            colorbar_label = "Magnitude (-)"
+
+
+        scatter = PlotRoutines.plot_sphere(
+                        dir=self.dir, 
+                        p=pk, 
+                        ax=ax,
+                        vminmax=vminmax
+                        )
+
+
+
+        cbar = fig.colorbar(scatter,label=colorbar_label)
+
+        ax.set_xlabel(r'$k_x$')
+        ax.set_ylabel(r'$k_y$')
+        ax.set_zlabel(r'$k_z$')
+        ax.view_init(azim=az,elev=elev)
+
+
+
+        plt.title(f'|P(k)| - {freq:.2f} Hz - kind: {kind} - Travel: {self.travel}',pad=20)
     
+    def estimate_abs(self,):
+        # variable initialization
+        pk = self.pk 
+        direction = self.dir 
+        n_dir = len(direction[:,0]) #número de ondas planas
+        abs_theta = np.zeros([n_dir, pk.shape[1]])
+        p_reflected = np.zeros([n_dir, pk.shape[1]])
+        p_incident = np.zeros([n_dir, pk.shape[1]])
+
+        #coord trasnform
+        if not self.travel: #forces to be travelling direction
+            direction[:,2]  *= -1
+        _, elv, azm = cart2sph(direction[:,0],direction[:,1],direction[:,2]) 
+
+
+        # isincident = elv>0
+        incident_idx = np.where(elv > 0)
+        reflected_idx = np.where(not (elv > 0))
+
+        p_incident = np.sum(pk[incident_idx])
+        p_reflected = np.sum(pk[reflected_idx])
+
+        abs_theta = 1 - p_reflected/p_incident
+
+        
+
+
+
 
     def _pk_mean(self, freq_index):
         """Calcula a magnitude média de cada direção de propagação.
@@ -156,11 +224,8 @@ class PlotRoutines:
 
     """
     @staticmethod
-    def plot_map(dir,p,dinrange=20,
-                 projection='hammer',
-                 return_current=True,
-                 ax=None,
-                 fig=None,colorbar=True):
+    def plot_map(dir,p,
+                 ax=None,):
         """Realiza o plot do mapa de decomposição em ondas planas
 
         Args:
@@ -170,29 +235,14 @@ class PlotRoutines:
             return_current (bool, optional): Retornar ax e fig. Defaults to True.
 
         Returns:
-            _type_: ax e fig
+            _type_: ax e pc
         """
-        return_list = []
         _, elv, azm = cart2sph(dir[:,0],dir[:,1],dir[:,2]) 
-        # lon = np.degrees(azm)
-        # lat = np.degrees(elv)
-        if fig is None:
-            fig = plt.gcf()
-        fig.set_layout_engine('tight')
 
-        if ax is None:
-            ax = plt.axes(projection = projection)
-            return_list.append(ax)
-            # ax = fig.add_subplot(projection ="hammer")
-    
-        pc = ax.tripcolor(azm, elv, p, cmap="inferno",shading='gouraud')
-        pc.set_clim([-dinrange, 0])
+
+        tripcolor = ax.tripcolor(azm, elv, p, cmap="inferno",shading='gouraud')
         ax.grid(True)
 
-
-        if colorbar:
-            cbar = fig.colorbar(pc, orientation="horizontal", label="Magnitude (dB)")
-            return_list.append(cbar)
         
         for label in ax.get_xticklabels():
             label.set_color('white')
@@ -200,11 +250,11 @@ class PlotRoutines:
                 PathEffects.withStroke(linewidth=2, foreground='#00000077')
             ])
 
-        if return_current:
-            return return_list
+        return tripcolor
 
 
-    def plot_sphere(dir,p, dinrange=20, az=-60,elev=30,return_current=True,ax=None,fig=None):
+    @staticmethod
+    def plot_sphere(dir, p, ax, vminmax:list):
         """Realiza o plot da esfera de decomposição em ondas planas
 
         Args:
@@ -218,22 +268,8 @@ class PlotRoutines:
         Returns:
             _type_: ax e fig
         """
-        if fig is None:
-            fig = plt.gcf()
-        fig.set_layout_engine('tight')
-
-        # ax = fig.add_subplot(projection ="3d")
-        if ax is None:
-            ax = plt.axes(projection ="3d")
-
-
-        p=ax.scatter(dir[:,0], dir[:,1], dir[:,2], c = p,
-                        vmin = -dinrange, vmax = 0,cmap="inferno",s=50)
+        scatter = ax.scatter(dir[:,0], dir[:,1], dir[:,2], c = p,
+                           vmin = vminmax[0], vmax = vminmax[1],cmap="inferno",s=50)
         
-        cbar = fig.colorbar(p,label="Magnitude (dB)")
-        ax.set_xlabel(r'$k_x$ axis')
-        ax.set_ylabel(r'$k_y$ axis')
-        ax.set_zlabel(r'$k_z$ axis')
-        ax.view_init(azim=az,elev=elev)
-        if return_current:
-            return ax,cbar
+        return scatter
+        

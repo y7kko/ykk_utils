@@ -1,17 +1,16 @@
 #%% IMPORTS
 import numpy as np
 from sequential_measurement import ScannerMeasurement
+from decompositionclass import Decomposition
 from receivers import Receiver
 from sources import Source
 import pytta
 import os
-from datetime import datetime
 
 from typing import List
 
 
 from datetime import datetime
-import time
 
 
 #%%
@@ -163,3 +162,26 @@ class ScannerTemplate:
             date = datetime.now().strftime('%d%m%Y')
         name = f"{material}_L{L}{unit}_d{d}{unit}_{meas_type}_{date}"
         return name
+
+
+class DecompMacros:
+    @staticmethod
+    def load_checkpoint(main_folder,
+                        name,
+                        checkpoint_name='decomp_checkpoint'):
+        projpath = main_folder + name + '/'
+        decomp_obj = Decomposition() # instancia vazio para overwrite
+        decomp_obj.load(filename = checkpoint_name, 
+                        path = str(projpath))
+        return decomp_obj
+    
+    @staticmethod
+    def save_checkpoint(main_folder,
+                        name,
+                        decomp_obj:Decomposition,
+                        checkpoint_name='decomp_checkpoint',
+                        ):
+        projpath = main_folder + name + '/'
+        decomp_obj.save(filename = checkpoint_name, 
+                        path = str(projpath))
+
