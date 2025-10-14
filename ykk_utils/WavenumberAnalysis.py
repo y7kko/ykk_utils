@@ -37,7 +37,7 @@ class WavenumberAnalysis:
 
     def plot_map(self, 
                  dinrange=20,freq=1000,kind='oct',decibel=True,
-                 fig=None,colorbar=True,projection='hammer',ax=None,title=True):
+                 fig=None,colorbar=True,projection='hammer',ax=None,title=True,return_something=False):
         """Realiza o plot do mapa em projeção cartográfica (Hammer)
 
         Args:
@@ -85,7 +85,10 @@ class WavenumberAnalysis:
 
         if title:
             plt.title(f"|P(k)| - {freq:.2f} Hz - kind: {kind} - Travel: {self.travel}",pad=20)
+        if return_something:
+            return pc
 
+    
         
     def plot_sphere(self, dinrange=20, freq=1000, kind='oct',
                     ax=None,fig=None, az=-60,elev=30,decibel=True,title=True):
@@ -128,35 +131,43 @@ class WavenumberAnalysis:
 
         plt.title(f'|P(k)| - {freq:.2f} Hz - kind: {kind} - Travel: {self.travel}',pad=20)
     
-    def estimate_abs(self,):
+    def estimate_abs_naive(self,):
         # variable initialization
         pk = self.pk 
+        pk = np.abs(pk**2)
         direction = self.dir 
         n_dir = len(direction[:,0]) #número de ondas planas
-        abs_theta = np.zeros([n_dir, pk.shape[1]])
-        p_reflected = np.zeros([n_dir, pk.shape[1]])
-        p_incident = np.zeros([n_dir, pk.shape[1]])
-
+        
+        
         #coord trasnform
         if not self.travel: #forces to be travelling direction
             direction[:,2]  *= -1
+        
         _, elv, azm = cart2sph(direction[:,0],direction[:,1],direction[:,2]) 
 
+        unique_elv = np.unique(elv)
+        pk_theta = np.zeros(unique_elv.shape)
+        alpha_theta = np.zeros(int(np.ceil(unique_elv.shape[0]/2)))
+        alpha_freq = np.zeros(pk.shape[1])
 
-        # isincident = elv>0
-        incident_idx = np.where(elv > 0)
-        reflected_idx = np.where(not (elv > 0))
+        for freq_idx in range(pk.shape[1]):
+            for unique_idx in range(unique_elv.shape[0]):
+                idx = np.where(elv == unique_elv[unique_idx])[0]
+                pk_theta[unique_idx] = np.sum(pk[idx,freq_idx])
+            
 
-        p_incident = np.sum(pk[incident_idx])
-        p_reflected = np.sum(pk[reflected_idx])
+            for theta_idx in range(len(alpha_theta)):
+                alpha_theta[theta_idx] = 1 - pk_theta[theta_idx]/pk_theta[-theta_idx]
 
-        abs_theta = 1 - p_reflected/p_incident
-
+            elv_idx = int(np.ceil(unique_elv.shape[0]/2))
+            alpha_diff = 2*np.sum(alpha_theta*np.cos(unique_elv[elv_idx])*np.sin(unique_elv[elv_idx]))
+            alpha_freq[freq_idx] = alpha_diff
+        return alpha_freq
+        # return alpha_theta
         
 
-
-
-
+    # Rever se to fazendo media do jeito certo
+    #talvez utilizar squeeze
     def _pk_mean(self, freq_index):
         """Calcula a magnitude média de cada direção de propagação.
         Caso freq_index seja composto de um único valor a média é o próprio modulo

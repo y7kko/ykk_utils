@@ -6,8 +6,8 @@ from .RobotClass import RobotClass
 from .FractionalBands import OctaveBands,ThirdOctaveBands
 from .GlobalWorkspace import GlobalWorkspace
 from .ISO354checker import ISO354checker
-
-
+from .ISO354calc import ISO354
+from .error_functions import ykk_nmse,ykk_nmse_freq
 __all__ = ['OctFilter', 
            'ykkEDC', 
            'EDCinstancer', 
@@ -21,7 +21,10 @@ __all__ = ['OctFilter',
             'GlobalWorkspace',
             'ISO354checker',
             'ScannerTemplate',
-            'DecompMacros'
+            'DecompMacros',
+            'ISO354',
+            'ykk_nmse',
+            'ykk_nmse_freq'
            ]
 
 __version__ = '0.0.2'

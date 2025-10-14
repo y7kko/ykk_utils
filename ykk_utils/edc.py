@@ -165,7 +165,7 @@ class ykkEDC:
             return 10*np.log10(EDC)
     
     #Plotting routines
-    def plot_all(self,ax=None):
+    def plot_all(self,ax=None,show_legend=True):
         ax = _PlotRoutines.get_axis(ax)
 
         ax.set_xlim(-0, 6)
@@ -180,11 +180,10 @@ class ykkEDC:
 
         ax.grid()
         ax.set_ylabel('EDC (dB)')
-
-        legend = ax.legend()
-        for line in legend.get_lines(): #as EDCs possuem linewidth de 0.2
-            line.set_linewidth(1.2)
-        plt.tight_layout()
+        if show_legend:
+            legend = ax.legend()
+            for line in legend.get_lines(): #as EDCs possuem linewidth de 0.2
+                line.set_linewidth(1.2)
 
 
     def plot_edc_x_ht(self, index, band_freq = None,ax=None):
@@ -263,7 +262,8 @@ class _PlotRoutines:
                                             colors=band_color[band_idx],
                                             linewidths=0.2,
                                             label=label_list[band_idx],
-                                            zorder=6
+                                            zorder=2,
+                                            rasterized=True
                                             )
             ax.add_collection(line_collection)
 

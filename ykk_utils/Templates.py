@@ -6,7 +6,6 @@ from receivers import Receiver
 from sources import Source
 import pytta
 import os
-
 from typing import List
 
 
@@ -128,7 +127,7 @@ class ScannerTemplate:
 
 
     @staticmethod
-    def move_back(meas_obj: ScannerMeasurement,invert_y=True):
+    def move_back(meas_obj: ScannerMeasurement,invert_y=True,moveback=True):
         """Calcula a distância do ultimo ponto até a origem e move o robô
 
         Args:
@@ -136,11 +135,13 @@ class ScannerTemplate:
             invert_y (bool, optional): Inverter o eixo y(util por conta da convenção do stand_array). Defaults to True.
         """
         
-        final_point = meas_obj.receivers.coord[-1]
+        final_point = meas_obj.receivers.coord[-1].copy()
         if invert_y:
             final_point[1] *= -1
         moveback_dist = meas_obj.pt0 - final_point
-        meas_obj.move_motor_xyz(moveback_dist)
+        if moveback:
+            meas_obj.move_motor_xyz(moveback_dist)
+        
 
 
     @staticmethod
@@ -182,6 +183,7 @@ class DecompMacros:
                         checkpoint_name='decomp_checkpoint',
                         ):
         projpath = main_folder + name + '/'
+        os.makedirs(projpath,exist_ok=True)
         decomp_obj.save(filename = checkpoint_name, 
                         path = str(projpath))
 
