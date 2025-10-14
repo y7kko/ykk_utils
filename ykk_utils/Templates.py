@@ -127,7 +127,7 @@ class ScannerTemplate:
 
 
     @staticmethod
-    def move_back(meas_obj: ScannerMeasurement,invert_y=True,moveback=True):
+    def move_back(meas_obj: ScannerMeasurement,invert_y=True,moveback=True,autoshutdown=True):
         """Calcula a distância do ultimo ponto até a origem e move o robô
 
         Args:
@@ -141,6 +141,8 @@ class ScannerTemplate:
         moveback_dist = meas_obj.pt0 - final_point
         if moveback:
             meas_obj.move_motor_xyz(moveback_dist)
+        if autoshutdown:
+            meas_obj.board.shutdown()
         
 
 
