@@ -181,7 +181,7 @@ class RobotClass():
         while self.exit_flag == 0:
             self.pause(pausing_time = 0.2)
          
-    def stepper_run(self, motor, dist = 0.01):
+    def stepper_run(self, motor, dist = 0.01,bypass_correction=False):
         """ Move the motor
         
         If the distance is larger than 16 [cm], then the movement is executed
@@ -195,12 +195,29 @@ class RobotClass():
             Distance in [m] to move the motor
         """
         pre_steps_to_send = dist * self.micro_steps / 0.008
-        if abs(dist) <= 0.16:
+        if bypass_correction:
             steps_to_send = int(pre_steps_to_send)
+            print(f'Mandando esses steps {steps_to_send}')
             self.exit_flag = 0
             self.stepper_run_base(motor, steps_to_send)
-        elif abs(dist) >= 0.4:
+            return
+
+
+        if abs(dist) <= 0.16:
+            steps_to_send = int(pre_steps_to_send)
+            print(f'Mandando esses steps {steps_to_send}')
+            self.exit_flag = 0
+            self.stepper_run_base(motor, steps_to_send)
+        elif abs(dist) > 0.16 and abs(dist) < 0.32:
+            steps_to_send = int(pre_steps_to_send/2)
+            print(f'Mandando esses steps {steps_to_send} em 2x')
+            self.exit_flag = 0
+            self.stepper_run_base(motor, steps_to_send)            
+            self.exit_flag = 0
+            self.stepper_run_base(motor, steps_to_send)
+        elif abs(dist) >= 0.32 and abs(dist) < 0.64:
             steps_to_send = int(pre_steps_to_send/4)
+            print(f'Mandando esses steps {steps_to_send} em 4x')
             self.exit_flag = 0
             self.stepper_run_base(motor, steps_to_send)            
             self.exit_flag = 0
@@ -210,11 +227,14 @@ class RobotClass():
             self.exit_flag = 0
             self.stepper_run_base(motor, steps_to_send)
         else:
-            steps_to_send = int(pre_steps_to_send/2)
-            self.exit_flag = 0
-            self.stepper_run_base(motor, steps_to_send)            
-            self.exit_flag = 0
-            self.stepper_run_base(motor, steps_to_send)
+            steps_to_send = int(pre_steps_to_send/6)
+            print(f'Mandando esses steps {steps_to_send} em 6x')
+            for run in range(6):
+                self.exit_flag = 0
+                self.stepper_run_base(motor, steps_to_send)            
+
+
+
     
     def running_callback(self, data):
         """Callback function to inform if the motor is moving or not
@@ -247,7 +267,7 @@ class RobotClass():
         """
         time.sleep(pausing_time)
     
-    def move_motor(self, motor_to_move = 'x', dist = 0.01):
+    def move_motor(self, motor_to_move = 'x', dist = 0.01,bypass_correction=False):
         """ Move motor x, y or z
         
         Parameters
@@ -259,7 +279,7 @@ class RobotClass():
         micro_steps : int
             number of micro steps
         """
-        self.stepper_run(self.motor_dict[motor_to_move], dist = -dist)
+        self.stepper_run(self.motor_dict[motor_to_move], dist = -dist,bypass_correction=bypass_correction)
         self.pause(pausing_time = self.motor_pause_dict[motor_to_move])
         
     def move_motor_xyz(self, distance_vector):
