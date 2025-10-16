@@ -8,6 +8,8 @@ from .GlobalWorkspace import GlobalWorkspace
 from .ISO354checker import ISO354checker
 from .ISO354calc import ISO354
 from .error_functions import ykk_nmse,ykk_nmse_freq
+from .Measurement_utilities.ArrayInspector import ArrayInspector
+
 __all__ = ['OctFilter', 
            'ykkEDC', 
            'EDCinstancer', 
@@ -24,7 +26,9 @@ __all__ = ['OctFilter',
             'DecompMacros',
             'ISO354',
             'ykk_nmse',
-            'ykk_nmse_freq'
+            'ykk_nmse_freq',
+            'ArrayInspector'
+            
            ]
 
 __version__ = '0.0.2'

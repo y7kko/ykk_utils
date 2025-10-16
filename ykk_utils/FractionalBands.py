@@ -28,6 +28,14 @@ class OctaveBands:
         if _oct_minmax_freqs is None:
             _oct_minmax_freqs = _load_file('oct_minmax.csv')
         return _oct_minmax_freqs
+    
+    @staticmethod
+    def get_band(freq=1000):
+        center_freqs = OctaveBands.center_freqs()
+        minmax_freqs = OctaveBands.minmax_freqs()
+        idx = (abs(center_freqs-freq)).argmin()
+        return center_freqs[idx], minmax_freqs[idx]
+
 
 
 class ThirdOctaveBands:
@@ -44,3 +52,10 @@ class ThirdOctaveBands:
         if _thrd_minmax_freqs is None:
             _thrd_minmax_freqs = _load_file('third_oct_minmax.csv')
         return _thrd_minmax_freqs
+
+    @staticmethod
+    def get_band(freq=1000):
+        center_freqs = ThirdOctaveBands.center_freqs()
+        minmax_freqs = ThirdOctaveBands.minmax_freqs()
+        idx = (abs(center_freqs-freq)).argmin()
+        return center_freqs[idx], minmax_freqs[idx]
