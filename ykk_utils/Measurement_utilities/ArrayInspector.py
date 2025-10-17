@@ -23,9 +23,9 @@ class ArrayInspector:
  
         if show_maximum:
             argmax = np.abs(stand_array.argmax())
-            plt.scatter(argmax, stand_array[argmax, axis_idx])
-            plt.annotate(f'dx = {stand_array[argmax,axis_idx]:.2f} m', 
-                        (argmax, stand_array[argmax,axis_idx]))
+            plt.scatter(argmax, stand_array[argmax])
+            plt.annotate(f'dx = {stand_array[argmax]:.2f} m', 
+                        (argmax, stand_array[argmax]))
 
         plt.title(self.meas.name)
         plt.grid()
