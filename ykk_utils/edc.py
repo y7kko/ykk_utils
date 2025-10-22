@@ -25,7 +25,7 @@ band_color = [
 class ykkEDC:
     """ Classe destinada a calcular as EDCs e realizar operações com elas
     """
-    def __init__(self,ht_mtx=None, time = None, nthOct=1, minFreq=125, maxFreq=4E3, samplingRate=44100,base=10,order=6,refFreq=1000):
+    def __init__(self,ht_mtx=None, time = None, nthOct=3, minFreq=125, maxFreq=5E3, samplingRate=44100,base=10,order=6,refFreq=1000):
         """Classe dedicada a realizar operações com EDCs.
 
         Args:
@@ -85,9 +85,13 @@ class ykkEDC:
         return self.EDC_mtx
 
     def compute_all_tn(self,):
+        progress_bar = tqdm(total=3)
         self.computeT20_mtx()
+        progress_bar.update(1)
         self.computeT30_mtx()
+        progress_bar.update(1)
         self.computeEDT_mtx()
+        progress_bar.update(1)
 
     def computeT20_mtx(self,returncoefs=False):
         self.T20, self.T20_coefs = self.computeTn_mtx(start=-5, n=20)
@@ -185,6 +189,43 @@ class ykkEDC:
             legend = ax.legend()
             for line in legend.get_lines(): #as EDCs possuem linewidth de 0.2
                 line.set_linewidth(1.2)
+
+    def plot_single_band_EDC(self,band ,ax=None,xlim=None,ylim=None,):
+        """Plota todas as EDCs de uma banda específica
+
+        Args:
+            band (_type_): _description_
+            ax (_type_, optional): _description_. Defaults to None.
+            xlim (_type_, optional): _description_. Defaults to None.
+            ylim (_type_, optional): _description_. Defaults to None.
+        """
+        ax = _PlotRoutines.get_axis(ax)
+
+        if xlim is None:
+            xlim = [0,self.time[-1]]
+        if ylim is None:
+            ylim = [-80,0]
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+        band_idx = np.argmin(np.abs(self.band_freqs - band))
+        _PlotRoutines.plot_EDC_mtx(time=self.time,
+                                   EDC_mtx=self.EDC_mtx[:,:,band_idx],
+                                #    label_list=[f''],
+                                   ax=ax,
+                                   time_step=4
+                                   )
+        
+    def plot_single_Tn(self,band,kind='T20' ,ax=None,xlim=None,ylim=None,):
+        ax = _PlotRoutines.get_axis(ax)
+
+        band_idx = np.argmin(np.abs(self.band_freqs - band))
+        if kind == 'T20':
+            Tn = np.mean(self.T20_coefs[:,:,band_idx],axis=0) #checar isso aqui
+
+        ax.plot(self.time,Tn,label='$T_20$')
+
 
 
     def plot_edc_x_ht(self, index, band_freq = None,ax=None):

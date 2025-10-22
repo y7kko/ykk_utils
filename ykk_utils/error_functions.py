@@ -1004,5 +1004,7 @@ def ykk_nmse(x_sol, x_truth):
         nnse : float
             estimated NMSE
     """
-    nmse = (np.abs(x_sol-x_truth)/np.abs(x_truth))**2
+    nmse = (
+        (np.abs(x_sol) - np.abs(x_truth)) / np.abs(x_truth)
+        )**2
     return nmse

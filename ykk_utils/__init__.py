@@ -9,6 +9,7 @@ from .ISO354checker import ISO354checker
 from .ISO354calc import ISO354
 from .error_functions import ykk_nmse,ykk_nmse_freq
 from .Measurement_utilities.ArrayInspector import ArrayInspector
+from .PlottingLayouts import PlottingLayouts
 
 __all__ = ['OctFilter', 
            'ykkEDC', 
@@ -27,8 +28,8 @@ __all__ = ['OctFilter',
             'ISO354',
             'ykk_nmse',
             'ykk_nmse_freq',
-            'ArrayInspector'
-            
+            'ArrayInspector',
+            'PlottingLayouts'
            ]
 
 __version__ = '0.0.2'
