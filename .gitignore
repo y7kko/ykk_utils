@@ -128,3 +128,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Merda do Drive
+.tmp.driveupload
+.tmp.drivedownload
