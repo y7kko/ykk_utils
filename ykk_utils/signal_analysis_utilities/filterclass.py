@@ -120,7 +120,7 @@ class OctFilter(FilterBase):
     #     print(":WARNING: `OctFilter.filter` method will soon be deprecated.")
     #     return self._filter(sigobj)
     
-    def filter_mtx(self, ht_mtx):
+    def filter_mtx(self, ht_mtx,band_indexes=None):
         """
         Filter the signal object.
 
@@ -136,16 +136,65 @@ class OctFilter(FilterBase):
                 channel in the original signalObj.
 
         """
-        n = self.sos.shape[2]
+        if band_indexes is None:
+            n = self.sos.shape[2]
+            band_indexes = np.arange(0,n)
+        else:
+            n = len(band_indexes)
 
-
+    
         out_mtx = np.zeros(np.append(ht_mtx.shape,[n])) #[jrec,time,n]
-        progress_bar = tqdm(total=out_mtx.shape[0]*out_mtx.shape[2])
+        
+        
+        progress_bar = tqdm(total=out_mtx.shape[0]*n)
         for rec_idx in range(out_mtx.shape[0]):
-            for band_idx in range(out_mtx.shape[2]):
-                out_mtx[rec_idx, :, band_idx] = ss.sosfilt(self.sos[:, :, band_idx].copy(order='C'),
+            for band_idx in range(n):
+                filtered = ss.sosfilt(self.sos[:, :, band_indexes[band_idx]].copy(order='C'),
                                                             ht_mtx[rec_idx,:], #.copy(order='C')
                                                             axis=0).T
+           
+                out_mtx[rec_idx, :, band_idx] = filtered
+                progress_bar.update(1)
+
+        return out_mtx
+    
+
+    def filter_mtx_cached(self,file, ht_mtx,band_indexes=None,):
+        """
+        Filter the signal object.
+
+        For each channel inside the input signalObj, will be generated a new
+        SignalObj with the channel filtered signal.
+
+        Args:
+            sigobj: SignalObj
+
+        Return:
+            output: List
+                A list containing one SignalObj with the filtered data for each
+                channel in the original signalObj.
+
+        """
+        if band_indexes is None:
+            n = self.sos.shape[2]
+            band_indexes = np.arange(0,n)
+        else:
+            n = len(band_indexes)
+
+        n_irs = ht_mtx.shape[0]
+        n_t = ht_mtx.shape[1]
+        #out_mtx = np.zeros(np.append(ht_mtx.shape,[n])) #[jrec,time,n]
+        out_mtx = np.memmap(file, dtype=np.float64, mode='w+', 
+                                  shape=(n_irs, n_t, n))
+        
+        progress_bar = tqdm(total=out_mtx.shape[0]*n)
+        for rec_idx in range(out_mtx.shape[0]):
+            for band_idx in range(n):
+                filtered = ss.sosfilt(self.sos[:, :, band_indexes[band_idx]].copy(order='C'),
+                                                            ht_mtx[rec_idx,:], #.copy(order='C')
+                                                            axis=0).T
+           
+                out_mtx[rec_idx, :, band_idx] = filtered
                 progress_bar.update(1)
 
         return out_mtx

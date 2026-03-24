@@ -10,6 +10,9 @@ def compare_noise(ppro_obj:InsituMeasurementPostPro):
     """todo: Transformar isso num codigo de vdd. Fazer uma função auxiliar para varrer a pasta
     e retornar todos os filenames que match, fazer uma função que injeta .load_signal()
 
+    Compara a gravação do residual com os ultimos 10% de y_n(t). Para ter uma noção se
+    há SNR o bastante para calcular a EDC sem Lundeby
+
     Args:
         ppro_obj (InsituMeasurementPostPro): _description_
     """

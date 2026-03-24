@@ -1,10 +1,9 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-from .filterclass import OctFilter
-from .FractionalBands import OctaveBands,ThirdOctaveBands
-from .edc import ykkEDC
-from .ISOcalc.ISO9613 import ISO9613
+# from .FractionalBands import OctaveBands,ThirdOctaveBands
+from ..signal_analysis_utilities.edc import ykkEDC
+# from .ISOcalc.ISO9613 import ISO9613 # Preferencia por AirProperties
 
 from controlsair import AirProperties, AlgControls,cart2sph
 

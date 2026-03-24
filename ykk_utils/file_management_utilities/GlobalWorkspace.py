@@ -57,18 +57,23 @@ class GlobalWorkspace:
 class LocalWorkspace:    
     default_folder = _default_folder
 
-    @staticmethod
-    def globalpath(path:(str)):
-        path = path.removesuffix('/')
-
-        LocalWorkspace.default_folder = os.path.expandvars(path)
+    def __init__(self,path:str=''):        
+        global _default_folder
+        self.default_folder = _default_folder
         
-        os.makedirs(LocalWorkspace.default_folder,
-                    exist_ok=True)
-        return LocalWorkspace.default_folder
+        if not (path == ''):
+            self.set_path(path)
     
-    @staticmethod
-    def file(filename:str) -> 'str':
-        filepath = f'{LocalWorkspace.default_folder}/{filename}'
+    def set_path(self,path:(str)):
+        if path[-1] == '/':
+            path = path[:-1]
+
+        self.default_folder = os.path.expandvars(path)
+        
+        os.makedirs(self.default_folder,
+                    exist_ok=True)
+    
+    def file(self,filename:str) -> 'str':
+        filepath = f'{self.default_folder}/{filename}'
         return filepath
 

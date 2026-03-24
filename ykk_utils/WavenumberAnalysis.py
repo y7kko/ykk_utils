@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from controlsair import AirProperties, AlgControls,cart2sph
 from decompositionclass import Decomposition
-from .FractionalBands import ThirdOctaveBands,OctaveBands
+from .signal_analysis_utilities.FractionalBands import ThirdOctaveBands,OctaveBands
 import matplotlib.patheffects as PathEffects
+import cmcrameri.cm as cmc
 
 class WavenumberAnalysis:
     def __init__(self, decomp_obj:Decomposition, travel=True, ymirror=False):
@@ -37,7 +38,7 @@ class WavenumberAnalysis:
 
     def plot_map(self, 
                  dinrange=20,freq=1000,kind='oct',decibel=True,
-                 fig=None,colorbar=True,projection='hammer',ax=None,title=True,return_something=False):
+                 fig=None,colorbar=True,projection='hammer',ax=None,title=True,return_something=False,**kwargs):
         """Realiza o plot do mapa em projeção cartográfica (Hammer)
 
         Args:
@@ -66,7 +67,7 @@ class WavenumberAnalysis:
         pc = PlotRoutines.plot_map(
                         dir = dir,
                         p = pk,
-                        ax=ax
+                        ax=ax,**kwargs
                         )
 
         if decibel:
@@ -236,7 +237,7 @@ class PlotRoutines:
     """
     @staticmethod
     def plot_map(dir,p,
-                 ax=None,):
+                 ax=None,**kwargs):
         """Realiza o plot do mapa de decomposição em ondas planas
 
         Args:
@@ -248,11 +249,13 @@ class PlotRoutines:
         Returns:
             _type_: ax e pc
         """
+        defaults = dict(cmap='inferno',shading='gouraud')
+        kwargs = {**defaults,**kwargs}
         _, elv, azm = cart2sph(dir[:,0],dir[:,1],dir[:,2]) 
 
 
-        tripcolor = ax.tripcolor(azm, elv, p, cmap="inferno",shading='gouraud')
-        ax.grid(True)
+        tripcolor = ax.tripcolor(azm, elv, p, zorder=1,**kwargs)
+        ax.grid(True,zorder=2,alpha=0.5)
 
         
         for label in ax.get_xticklabels():
@@ -260,6 +263,7 @@ class PlotRoutines:
             label.set_path_effects([
                 PathEffects.withStroke(linewidth=2, foreground='#00000077')
             ])
+            label.set_zorder(90)
 
         return tripcolor
 
