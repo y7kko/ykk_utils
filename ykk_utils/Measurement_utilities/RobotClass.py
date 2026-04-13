@@ -21,6 +21,10 @@ from telemetrix import telemetrix
 #import SSRfunctions as SSR
 
 class RobotClass():
+    """Basicamente a parte do scanner measurement que faz movimentos de verdade
+
+    Ver ScannerMeasurement para mais detalhes
+    """
     def __init__(self,
             x_pwm_pin = 2, x_digital_pin = 24,
             y_pwm_pin = 3, y_digital_pin = 26,

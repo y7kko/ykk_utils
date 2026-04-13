@@ -7,13 +7,26 @@ import os
 import matplotlib.pyplot as plt
 
 class ArrayInspector:
+    """Conjunto de funções para analisar o arranjo de coordenadas de medição
+    """
     def __init__(self, meas_obj:ScannerMeasurement):
+        """Inicializar com meas_obj
+
+        Args:
+            meas_obj (ScannerMeasurement): _description_
+        """
         self.meas = meas_obj
         self.axis = dict(x=0,y=1,z=2)
         self.coord = meas_obj.receivers.coord
         self.stand = meas_obj.stand_array
 
     def plot_maximum_movement(self,axis='x',show_maximum=True):
+        """Gera um gráfico do movimento de um eixo
+
+        Args:
+            axis (str, optional): _description_. Defaults to 'x'.
+            show_maximum (bool, optional): _description_. Defaults to True.
+        """
         axis_idx = self.axis[axis]
         stand_array = self.meas.stand_array[:,axis_idx]
         
@@ -31,6 +44,13 @@ class ArrayInspector:
         plt.grid()
 
     def plot_coords_error(self,axis='x',compare_with_stand=True,invert_y=True):
+        """Compara em um eixo específico a coordenada esperada e a soma acumulada dos movimentos
+
+        Args:
+            axis (str, optional): _description_. Defaults to 'x'.
+            compare_with_stand (bool, optional): _description_. Defaults to True.
+            invert_y (bool, optional): _description_. Defaults to True.
+        """
         ax_idx  = self.axis[axis]
         stand_array = self.meas.stand_array[:,ax_idx]
         coords  = self.meas.receivers.coord[:,ax_idx]
@@ -44,6 +64,13 @@ class ArrayInspector:
         plt.plot(accum_stand)
 
     def plot_plane(self,axis1='x',axis2='y',show_indices=True):
+        """Plota em corte os pontos de medição
+
+        Args:
+            axis1 (str, optional): _description_. Defaults to 'x'.
+            axis2 (str, optional): _description_. Defaults to 'y'.
+            show_indices (bool, optional): _description_. Defaults to True.
+        """
         axis1 = self.axis[axis1]
         axis2 = self.axis[axis2]
 
@@ -58,6 +85,14 @@ class ArrayInspector:
                 plt.annotate(f'{idx}',[x,y])
 
     def plot_coords_error(self,axis='x',compare_with_stand=True,invert_y=True):
+        """Sinceramente não sei se é esse ou a definição anterior que está valendo daklvnadklvklvnakld.
+        A diferença é que esse realmente compara por diferença
+
+        Args:
+            axis (str, optional): _description_. Defaults to 'x'.
+            compare_with_stand (bool, optional): _description_. Defaults to True.
+            invert_y (bool, optional): _description_. Defaults to True.
+        """
         ax_idx  = self.axis[axis]
         stand_array = self.meas.stand_array[:,ax_idx]
         coords  = self.meas.receivers.coord[:,ax_idx]
@@ -70,6 +105,9 @@ class ArrayInspector:
 
 
     def __repr__(self):
+        """
+        Caso você dê print(ArrayInspector_instance) ele te retorna alguns dados gerais sobre o array
+        """
         stand = self.meas.stand_array
         maxstand = list(
             stand[np.abs(stand[:,idx]).argmax(),idx] for idx in range(3)

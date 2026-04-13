@@ -7,7 +7,8 @@ _default_folder = os.path.expandvars('%userprofile%/Desktop')
 
 class GlobalWorkspace:
     """
-    Docstring for GlobalWorkspace
+    Serve para criar um workspace folder fora do workspace folder basicamente, 
+    sem precisar digitar paths complicados
     """    
     global _default_folder
     default_folder = _default_folder
@@ -76,4 +77,3 @@ class LocalWorkspace:
     def file(self,filename:str) -> 'str':
         filepath = f'{self.default_folder}/{filename}'
         return filepath
-

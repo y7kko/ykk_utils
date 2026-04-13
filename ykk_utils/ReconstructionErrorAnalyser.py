@@ -8,6 +8,8 @@ from .signal_analysis_utilities.error_functions import Efren
 from .signal_analysis_utilities.FractionalBands import OctaveBands,ThirdOctaveBands
 
 class ReconstructionAnalyser:
+    """Classe para comparar erros de reconstrução do meu TCC1.
+    """
     def __init__(self,decomp_obj:Decomposition,rec_ppro:InsituMeasurementPostPro,decomp_ppro:InsituMeasurementPostPro):
         self.decomp_obj = decomp_obj
         self.rec_ppro = rec_ppro

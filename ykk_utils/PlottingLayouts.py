@@ -3,13 +3,22 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import locale
 class PlottingLayouts:
+    """Collection of Plotting macros
+
+    Raises:
+        KeyError: _description_
+
+    Returns:
+        _type_: _description_
+    """
     @staticmethod
     def structuredgrid(gridsize = [2,2], row_title = None, col_title = None, 
                        figsize = None, col_fontsize = 12, row_fontsize = 12,
                        col_txt_size = 0.1, row_txt_size = 0.1, sharex = True,
                        sharey = True, ax_kw:dict=None):
         """Cria um gridlayout de títulos compartilhados, para casos onde todos os plots
-        representam um "meshgrid" de algo:
+        representam um "meshgrid" de algo maior. 
+        Esse código só tem garantia de funcionar bem com o axis default do matplotlib
 
         Examples:
             >>> axd['ax12'].plot() #'plota na linha 1 coluna 2'
@@ -79,13 +88,32 @@ class PlottingLayouts:
                         fontsize=row_fontsize, fontweight='normal', transform=ax_dict[ax_key].transAxes)
 
         return fig, ax_dict
+
     
     @staticmethod
     def structuredgrid2(gridsize=[2,2], row_title=None, col_title=None, 
                        figsize=None, col_fontsize=12, row_fontsize=12,
                        col_txt_size=0.1, row_txt_size=0.1, sharex=True,
                        sharey=True, ax_kw:dict=None):
-        
+        """Só deus sabe a diferença desse para os outros dois.
+        Acho que esse plota mapa de calor com projeção cartesiana
+
+        Args:
+            gridsize (list, optional): _description_. Defaults to [2,2].
+            row_title (_type_, optional): _description_. Defaults to None.
+            col_title (_type_, optional): _description_. Defaults to None.
+            figsize (_type_, optional): _description_. Defaults to None.
+            col_fontsize (int, optional): _description_. Defaults to 12.
+            row_fontsize (int, optional): _description_. Defaults to 12.
+            col_txt_size (float, optional): _description_. Defaults to 0.1.
+            row_txt_size (float, optional): _description_. Defaults to 0.1.
+            sharex (bool, optional): _description_. Defaults to True.
+            sharey (bool, optional): _description_. Defaults to True.
+            ax_kw (dict, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         n_linhas = gridsize[0]
         n_colunas = gridsize[1]
 
@@ -149,14 +177,31 @@ class PlottingLayouts:
         return fig, ax_dict
 
 
-
-
     @staticmethod
     def structuredgrid3(gridsize=[2,2], row_title=None, col_title=None, 
                     figsize=None, col_fontsize=12, row_fontsize=12,
                     col_txt_size=0.1, row_txt_size=0.1, sharex=True,
                     sharey=True, ax_kw:dict=None, colorbar_width=0.05):
-        
+        """Só deus sabe qual a diferença desse pros outros dois. Acho que esse plota
+        mapa de calor com projeção Hammer
+
+        Args:
+            gridsize (list, optional): _description_. Defaults to [2,2].
+            row_title (_type_, optional): _description_. Defaults to None.
+            col_title (_type_, optional): _description_. Defaults to None.
+            figsize (_type_, optional): _description_. Defaults to None.
+            col_fontsize (int, optional): _description_. Defaults to 12.
+            row_fontsize (int, optional): _description_. Defaults to 12.
+            col_txt_size (float, optional): _description_. Defaults to 0.1.
+            row_txt_size (float, optional): _description_. Defaults to 0.1.
+            sharex (bool, optional): _description_. Defaults to True.
+            sharey (bool, optional): _description_. Defaults to True.
+            ax_kw (dict, optional): _description_. Defaults to None.
+            colorbar_width (float, optional): _description_. Defaults to 0.05.
+
+        Returns:
+            _type_: _description_
+        """
         n_linhas = gridsize[0]
         n_colunas = gridsize[1]
 
@@ -236,6 +281,7 @@ class PlottingLayouts:
 
         return fig, ax_dict
 
+
     @staticmethod
     def add_colorbar_to_row(fig, ax_dict, row, mappable, label=None, orientation='vertical'):
         """
@@ -269,6 +315,7 @@ class PlottingLayouts:
             
         return cbar
 
+
     @staticmethod
     def serif_font(virgulas=True):
         """Muda o sistema global de fontes do matplotlib para
@@ -281,8 +328,9 @@ class PlottingLayouts:
         })
 
         if virgulas:
-            locale.setlocale(locale.LC_NUMERIC, 'pt_BR.UTF-8')
-            plt.rcParams['axes.formatter.use_locale'] = True
+            PlottingLayouts.set_ptbr()
+
+
     @staticmethod
     def set_ptbr():
         locale.setlocale(locale.LC_NUMERIC, 'pt_BR.UTF-8')

@@ -11,7 +11,7 @@ from tqdm import tqdm
 import os
 from.FractionalBands import OctaveBands, ThirdOctaveBands
 
-class FilterBase(object):
+class FractionalFilterBase(object):
     """Base class for filters."""
 
     def __init__(self, order: int, samplingrate: int):
@@ -37,9 +37,10 @@ class FilterBase(object):
 
 
 
-class OctFilter(FilterBase):
+class OctFilter(FractionalFilterBase):
     """
-    Octave filter.
+    (DEPRECATED) Octave filter. This class is being kept for retrocompatibility purposes. 
+    It is an adaptation of PyTTa filtering classes to work with InsituMeasurementPostPro ht_mtx arrays.
     """
     def __init__(self,
                  order: int = None,
@@ -74,7 +75,7 @@ class OctFilter(FilterBase):
             DESCRIPTION.
 
         """
-        FilterBase.__init__(self, order, samplingRate)
+        FractionalFilterBase.__init__(self, order, samplingRate)
         self.nthOct = nthOct
         self.minFreq = minFreq
         self.minBand = freq_to_band(minFreq, nthOct, refFreq, base)

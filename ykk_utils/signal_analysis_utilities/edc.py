@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from ppro_meas_insitu import InsituMeasurementPostPro
 from matplotlib.collections import LineCollection
-from .filterclass import OctFilter
+from .fractionalfilterclass import OctFilter
 from .FractionalBands import OctaveBands,ThirdOctaveBands
 from typing import Any
 import gc

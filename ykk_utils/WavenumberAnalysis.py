@@ -7,6 +7,10 @@ import matplotlib.patheffects as PathEffects
 import cmcrameri.cm as cmc
 
 class WavenumberAnalysis:
+    """Classe para analisar o espectro do número de onda de uma decomposição em ondas planas
+
+    Método: A wavenumber approach to quatifying piririr pororo (Nolan, 2020)
+    """
     def __init__(self, decomp_obj:Decomposition, travel=True, ymirror=False):
         """Classe utilizada para realizar operações com a decomposição em ondas planas
 
