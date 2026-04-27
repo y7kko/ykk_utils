@@ -2,7 +2,7 @@ from .measurement_utilities.ScannerTemplates import ScannerTemplate,DecompMacros
 from .measurement_utilities.RobotClass import RobotClass
 from .measurement_utilities.ArrayInspector import ArrayInspector
 
-from .signal_analysis_utilities.edc import ykkEDC, EDCinstancer
+from .signal_analysis_utilities.edc_old import ykkEDC, EDCinstancer
 from .signal_analysis_utilities.NominalFractionalBands import OctaveBands,ThirdOctaveBands
 from .signal_analysis_utilities.fractionalfilterclass import OctFilter
 from .signal_analysis_utilities import error_functions

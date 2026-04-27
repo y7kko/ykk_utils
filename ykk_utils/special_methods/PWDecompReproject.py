@@ -25,6 +25,7 @@ class PWDecompReproj:
         compute_uxy : bool
             Whether to compute x and y components of particle velocity or not (Default is False)
         """
+        coord = np.asarray(coord)
         if len(coord.shape) == 1:
             coord = coord.reshape(1,3)
             
@@ -43,5 +44,7 @@ class PWDecompReproj:
             self.p_recon[:,f_idx] = h_mtx @ self.pk[:,f_idx]
             bar.update(1)
         bar.close()
+        if self.p_recon.shape[0] == 1:
+            self.p_recon = self.p_recon.flatten() 
         return self.p_recon
 

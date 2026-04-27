@@ -83,12 +83,12 @@ def solve_LSQ(Kernel,pk_input,return_all=False):
     """Resolve um problema utilizando Least-Squares optimization
 
     Args:
-        Kernel (np.ndarray): O "modelo de mundo"
-        pk_input (np.ndarray): Os dados que você quer ajustar
+        Kernel (np.ndarray): O "modelo de mundo" [número de direções x (N+1)^2]
+        pk_input (np.ndarray): Os dados que você quer ajustar [número de direções,]
         return_all (bool, optional): Caso true, todos os returns do linalg.lstsq serão retornados ao caller. Defaults to False.
 
     Returns:
-        _type_: _description_
+        ndarray: Um vetor de shape [(N+1^2),]
     """
     Amn, res, rank, singular = np.linalg.lstsq(Kernel,
                                            pk_input,rcond=None)

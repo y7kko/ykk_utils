@@ -91,6 +91,19 @@ def generate_frequency_vector(fs,nfft=None,df=None,input_freq=None,half_spectrum
     return out_freq
 
 def generate_time_vector(data,fs):
+    """Gera um vetor de frequências para um dado no tempo
+
+    Args:
+        data (ndarray or int): 
+            - Caso seja um escalar, é gerado um vetor
+              com len(time_vector) = data.
+            - Caso seja um vetor, é gerado um vetor com
+                len(time_vector) = len(data)
+        fs (float): Frequência de amostragem do sinal
+
+    Returns:
+        ndarray: Um vetor temporal correspondente aos dados de entrada
+    """
     # print('att')
     if np.isscalar(data):
         n_spl = data
@@ -171,3 +184,6 @@ def frequency_roll(input_f,fs,freq,t_shift):
 #Aliases
 troll = time_roll
 ftroll = frequency_roll
+
+tvec = generate_time_vector
+fvec = generate_frequency_vector
