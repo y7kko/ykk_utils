@@ -7,6 +7,9 @@ from scipy.special import sph_harm
 
 def cart2sph(x, y, z, positive_azm=False, steady_elv=False):
     """Conversion of cartesian to spherical coordinates.
+        Essa função foi tirada do Spaudiopy, preferi apenas reimplementar
+        para evitar a criação de mais uma dependência. 
+        Eventualmente pretendo abrir as equações e implementar sozinho.
     
         MIT License
         Copyright (c) 2025 Christoph Hold
@@ -95,7 +98,7 @@ def solve_LSQ(Kernel,pk_input,return_all=False):
     return Amn
 
 
-def get_lm_map(N):
+def get_nm_map(N):
     """Retorna os pares (nm) correspondentes de cada linha do
     kernel
 
@@ -105,14 +108,14 @@ def get_lm_map(N):
     Returns:
         lm_map (np.ndarray): O mapa
     """
-    lm_map = np.zeros([(N+1)**2,2],
+    nm_map = np.zeros([(N+1)**2,2],
                       dtype=int
                     )
 
     counter = 0
     for n in range(0,N+1):
         for m in range(-n,n+1):
-            lm_map[counter, 0] = n
-            lm_map[counter, 1] = m
+            nm_map[counter, 0] = n
+            nm_map[counter, 1] = m
             counter += 1
-    return lm_map
+    return nm_map

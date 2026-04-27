@@ -40,6 +40,7 @@ class SHMatrixProcessor:
                                                 N=Nmax,
                                                 dtype=complex
                                                 )
+        self.nmmap = sh_ft.get_nm_map(N = Nmax)
         return self
         
     def decompose(self,):
@@ -73,17 +74,56 @@ class SHMatrixProcessor:
             dir = dir.reshape(1,3)
 
         az, el, _ = sh_ft.cart2sph(dir[:,0],dir[:,1],dir[:,2])
-        Yprojct = sh_ft.generate_Y_kernel(azm=az,
-                                        elv=el,
-                                        N=self.Nmax,
-                                        dtype=complex
-                                    )
+        Yprojct = sh_ft.generate_Y_kernel(azm = az,
+                                          elv = el,
+                                          N = self.Nmax,
+                                          dtype = complex
+                                        )
         n_freqs = self.SH_decomp.shape[1]
         
         p_projected = np.zeros([dir.shape[0],n_freqs],dtype=complex)
         for f in range(n_freqs):
-            p_projected[:,f] = np.matmul(Yprojct,
-                                         self.SH_decomp[:,f]
-                                         )
+            p_projected[:,f] = Yprojct @ self.SH_decomp[:,f]
 
         return p_projected
+    
+    def _nm2idx(self,deg,ordr):
+        if hasattr(self,'SH_decomp'):
+            idx = np.where((self.nmmap[:,0] == deg) & (self.nmmap[:,1] == ordr))[0]
+            if not (len(idx) == 0):
+                return idx
+            else:
+                raise ValueError('(n,m) pair not defined')
+        else:
+            raise ValueError('Decomposição em harmônicos esféricos não realizada')
+
+    @property
+    def nm(self,):
+        """Acessar os resultados de composição usando nm como indexadores.
+            Exemplo:
+                obj.nm[0,0] #retorna A00(f)
+        """
+        return nmIndexer(self)
+
+
+class nmIndexer:
+    """Serve para facilitar acesso aos dados da decomposição.
+    Exemplo:
+        SHMatrixProcessor.nm[0,0] #retorna A00(f)
+    """
+    def __init__(self,parent):
+        self.parent:SHMatrixProcessor = parent
+
+    def __getitem__(self, key):
+        n,m = key
+        idx = self.parent._nm2idx(n,m)
+
+        if len(idx) == 1:
+            return self.parent.SH_decomp[idx,:].flatten()
+        else: #Array slice ou algo assim, infelizmente não impementei
+            return self.parent.SH_decomp[idx,:]
+
+    def __setitem__(self, key, value):
+        n,m = key
+        idx = self.parent._nm2idx(n,m)
+        self.parent.SH_decomp[idx,:] = value
