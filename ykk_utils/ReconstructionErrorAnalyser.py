@@ -5,7 +5,7 @@ from decompositionclass import Decomposition
 from ppro_meas_insitu import InsituMeasurementPostPro
 from controlsair import AirProperties, AlgControls#, add_noise, add_noise2
 from .signal_analysis_utilities.error_functions import Efren
-from .signal_analysis_utilities.FractionalBands import OctaveBands,ThirdOctaveBands
+from .signal_analysis_utilities.NominalFractionalBands import OctaveBands,ThirdOctaveBands
 
 class ReconstructionAnalyser:
     """Classe para comparar erros de reconstrução do meu TCC1.

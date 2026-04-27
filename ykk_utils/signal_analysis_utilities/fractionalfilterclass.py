@@ -9,7 +9,7 @@ from pytta.utils import fractional_octave_frequencies, freq_to_band, \
                         normalize_frequencies, freqs_to_center_and_edges
 from tqdm import tqdm
 import os
-from.FractionalBands import OctaveBands, ThirdOctaveBands
+from.NominalFractionalBands import OctaveBands, ThirdOctaveBands
 
 class FractionalFilterBase(object):
     """Base class for filters."""

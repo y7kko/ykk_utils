@@ -80,9 +80,11 @@ class colabrw():
 
         if not autodict:
             output_data = {
-                'pk': file['pk'][:],
-                'dir': file['dir'][:],
-                'freq': file['freq'][:]
+                'pk':   file['pk'][:],
+                'dir':  file['dir'][:],
+                'freq': file['freq'][:],
+                'k0':   file['k0'][:],
+                'fs':   file['fs'][()],
             }
         else:
             # N vo nem fingir que n copiei do gepeto
@@ -98,8 +100,3 @@ class colabrw():
             output_data = extract_data(file)
 
         return output_data
-
-        
-
-
-

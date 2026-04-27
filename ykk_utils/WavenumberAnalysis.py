@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from controlsair import AirProperties, AlgControls,cart2sph
 from decompositionclass import Decomposition
-from .signal_analysis_utilities.FractionalBands import ThirdOctaveBands,OctaveBands
+from .signal_analysis_utilities.NominalFractionalBands import ThirdOctaveBands,OctaveBands
 import matplotlib.patheffects as PathEffects
 import cmcrameri.cm as cmc
 

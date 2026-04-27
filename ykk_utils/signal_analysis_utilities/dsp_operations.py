@@ -41,7 +41,7 @@ def complete_missing_frequencies(input_freq:np.ndarray,
     # Dumping old spectrum into the new zero padded spectrum
     out_spk[input_init_idx:input_last_idx+1] = input_spk
 
-    #Quase zero
+    #Impede zero absoluto (útil para quando dB)
     out_spk[np.where(out_spk==0)[0]] = np.finfo(out_spk.dtype).tiny
 
 
@@ -91,7 +91,83 @@ def generate_frequency_vector(fs,nfft=None,df=None,input_freq=None,half_spectrum
     return out_freq
 
 def generate_time_vector(data,fs):
-    n_spl = len(data)
-    max_time = n_spl/fs
-    time_vector = np.arange(0,max_time,1/fs)
+    # print('att')
+    if np.isscalar(data):
+        n_spl = data
+    else:
+        n_spl = len(data)
+    max_time = (n_spl - 1)/fs
+    time_vector = np.linspace(0,max_time,n_spl)
     return time_vector
+
+
+def ifft_trunc(input_spk,freq,fs,normalize=True):
+    """Realiza a ifft de um espectro truncado.
+    À parte não definida pelo sinal de entrada, são atribuidos zeros.
+
+
+    Args:
+        input_spk (ndarray): Espectro truncado
+        freq (ndarray): Frequências do espectro truncado len(freq)==len(input_spk)
+        fs (int): Taxa de amostragem
+
+    Returns:
+        _type_: O sinal no tempo
+    """
+    spk_full = complete_missing_frequencies(input_freq = freq,
+                                            input_spk = input_spk,
+                                            fs = fs
+                                            )
+    out_t = np.fft.irfft(spk_full)
+    if normalize:
+        out_t /= np.amax(out_t)
+    return out_t
+
+def time_roll(input_t,fs,t_shift,axis=None):
+    """Faz um shift circular no array
+
+    troll e time_roll são equivalentes
+
+    Args:
+        input_t (ndarray): o dado(no tempo) que você quer fazer o shift temporal
+        fs (int): Frequencia de amostragem
+        time (float): o shift temporal (em segundos) que você quer dar
+        axis (int, optional): Qual eixo do vetor o shift deve ser feito. Defaults to None.
+
+    Returns:
+        ndarray: O sinal com shift circular
+    """
+    return np.roll(input_t, int(t_shift*fs),axis=axis)
+
+
+def frequency_roll(input_f,fs,freq,t_shift):
+    """Faz um shift circular no tempo de um array na frequência.
+    O shift circular é realizado por meio da propriedade do atraso
+    da transformada de Fourier, em que
+    fft{x(t-t0)} = e^{-j*w*t0} X(jw)
+
+    Note que:
+        A função não assume shape da matriz, matrizes com dimensões
+        de tamanho igual ao vetor de frequência podem gerar comportamento
+        não definido.
+    
+    
+    frequency_troll e ftroll são equivalentes.
+
+    Args:
+        input_f (_type_): Sinal de entrada no espectro da frequência
+        fs (_type_): Frequência de amostragem
+        freq (_type_): Vetor de frequências
+        t_shift (_type_): o quanto de shift temporal quero dar 
+
+    Returns:
+        _type_: A matriz input_f, multiplicada por uma exponencial
+            equivalente a um atraso temporal.
+    """
+    n_shift = t_shift*fs
+    return input_f * np.exp(-1j*np.pi*2*freq*n_shift/fs)
+
+
+#Aliases
+troll = time_roll
+ftroll = frequency_roll
