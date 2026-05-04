@@ -1,6 +1,6 @@
 import numpy as np
 from . import sh_ft, sh_operations
-from ..signal_analysis_utilities import dsp_operations
+from ..signal_analysis_utilities import dsp_funcs
 from tqdm import tqdm
 from ..SmallScripts import tqdm_flush
 
@@ -85,7 +85,7 @@ class SHMatrixProcessor:
         return self
 
 
-    def project(self,dir,Nmax=None):
+    def project(self,dir,Nmax=None) -> np.ndarray:
 
         #::: Condicionamento da entrada
         dir = np.asarray(dir)

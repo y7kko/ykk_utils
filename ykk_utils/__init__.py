@@ -5,7 +5,7 @@ from .measurement_utilities.ArrayInspector import ArrayInspector
 from .signal_analysis_utilities.edc_old import ykkEDC, EDCinstancer
 from .signal_analysis_utilities.NominalFractionalBands import OctaveBands,ThirdOctaveBands
 from .signal_analysis_utilities.fractionalfilterclass import OctFilter
-from .signal_analysis_utilities import error_functions
+from .signal_analysis_utilities import error_funcs
 from .signal_analysis_utilities.plotspectrogram import spectrogram
 
 from .file_management_utilities.GlobalWorkspace import GlobalWorkspace
@@ -39,7 +39,7 @@ __all__ = ['OctFilter',
             'ykk_nmse_freq',
             'ArrayInspector',
             'PlottingLayouts',
-            'error_functions',
+            'error_funcs',
             'ReconstructionAnalyser',
             'colab_tools',
             'bulkFiltering',

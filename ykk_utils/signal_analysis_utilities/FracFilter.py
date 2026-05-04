@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-from ykk_utils.signal_analysis_utilities import dsp_operations as dsp
-import dsp_operations as dsp
+from ykk_utils.signal_analysis_utilities import dsp_funcs as dsp
+import ykk_utils.signal_analysis_utilities.dsp_funcs as dsp
 from .NominalFractionalBands import ThirdOctaveBands, OctaveBands
 
 class FractionalFilter:
@@ -54,7 +54,6 @@ class FractionalFilter:
         self.f_nominal = self.get_nominal_freqs(nthoct)
         self.generate_sos_matrix()
         
-
     def generate_sos_matrix(self):
         """Gera a matriz de seções de segunda ordem (biquad -- iir)
 
@@ -85,7 +84,6 @@ class FractionalFilter:
             sos_mtx[band_idx,:,:] = sos
 
         self.sos_mtx = sos_mtx
-
 
     def get_midfreq_expression(self,b):
         """Retorna uma função para cálculo da
@@ -120,26 +118,23 @@ class FractionalFilter:
         """
         if b == 1:      # Anexo E.1
             cf= OctaveBands.center_freqs() #Pode ser substituido por uma lista btw
-            cf = cf[abs(self.f_center[0]-cf).argmin():abs(self.f_center[-1]-cf).argmax()]
-            return cf
+            cf = cf[abs(self.f_center[0]-cf).argmin():abs(self.f_center[-1]-cf).argmin()]
         elif b == 3:    # Anexo E.1
             cf = ThirdOctaveBands.center_freqs()
-            cf = cf[abs(self.f_center[0]-cf).argmin():abs(self.f_center[-1]-cf).argmax()]
-            return cf
+            cf = cf[abs(self.f_center[0]-cf).argmin():abs(self.f_center[-1]-cf).argmin()]
         elif b == 2:    # Anexo E.2
-            return self.f_center.round(3)
+            cf = self.f_center.round(3)
         else:           # Anexo E.3
-            bfreq = self.f_center.copy()
-
+            cf = self.f_center.copy()
             #Essa expressão deveria obter o primeiro dígito significativo
-            left_vals = np.floor(bfreq / (10 ** np.floor(np.log10(bfreq)))).astype(int)
+            left_vals = np.floor(cf / (10 ** np.floor(np.log10(cf)))).astype(int)
             for idx in range(len(left_vals)):
                 if left_vals[idx]<=4:
-                    bfreq[idx] = bfreq[idx].round(3)
+                    cf[idx] = cf[idx].round(3)
                 else:
-                    bfreq[idx] = bfreq[idx].round(2)
-                return bfreq
+                    cf[idx] = cf[idx].round(2)
 
+        return cf
 
     @staticmethod
     def _x_minmax(freqlims,b,fr):
@@ -162,16 +157,13 @@ class FractionalFilter:
         else:
             x = lambda fm: (20*b*np.log10(fm/fr)-3)/6
 
-
         # Acho que tem vezes que não vai funcionar, não sei como abordar...
         x_min = int(np.round(x(f_min) + 1e-12))
         x_max = int(np.round(x(f_max)))
         
         return x_min, x_max
 
-
-
-    def filter(self, input, band = None, axis=-1):
+    def filter(self, input, band = None, axis=None):
         """Filtra um sinal(ou múltiplos sinais) de entrada. Caso
         input tenha ndims > 1, será necessário especificar um axis
 
@@ -183,7 +175,9 @@ class FractionalFilter:
                     da frequência especificada
                 - Caso uma lista: Retorna o sinal filtrado nas respectivas 
                     bandas mais próximas especificadas na lista. Defaults to None.
-            axis (int, optional): O eixo temporal. Defaults to -1.
+            axis (int, optional): O eixo temporal(Caso axis = None, axis é overwritten para -1). 
+                Defaults to None.
+
 
         Returns:
             ndarray: Vetor de entrada filtrado em bandas. A saida
@@ -193,13 +187,16 @@ class FractionalFilter:
         if band is None: 
             sos_mtx = self.sos_mtx
         elif np.isscalar(band): 
-            idx = (self.f_nominal-band).argmin()
+            idx = abs(self.f_nominal-band).argmin()
             sos_mtx = self.sos_mtx[idx,:,:].reshape([1,self.filter_order,6])
         else: 
             idx = np.array(
-                list( (self.f_nominal - f).argmin() for f in band )
+                list( abs(self.f_nominal - f).argmin() for f in band )
                 ).sort()
             sos_mtx = self.sos_mtx[idx,:,:]
+        #Axis = None é undefined behaviour em sosfilt
+        if axis is None:
+            axis = -1
 
         # list unwrap e depois wrap dnv
         output = np.zeros( [sos_mtx.shape[0], *list(input.shape)] )
