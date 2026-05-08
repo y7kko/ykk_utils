@@ -49,6 +49,29 @@ def cart2sph(x, y, z, positive_azm=False, steady_elv=False):
         np.arccos(z / np.clip(r, 10e-15, None))
     return azm, elv, r
 
+def sph2cart(azi, zen, r=1):
+    """ Conversion of spherical to cartesian coordinates.
+        
+        Essa função foi tirada do Spaudiopy, preferi apenas reimplementar
+        para evitar a criação de mais uma dependência. 
+        Eventualmente pretendo abrir as equações e implementar sozinho.
+    
+        MIT License
+        Copyright (c) 2025 Christoph Hold
+        Source: https://github.com/chris-hld/spaudiopy (v0.2.0)
+        DOI: 10.5281/zenodo.15384855
+
+
+    """
+    azi = np.asarray(azi)
+    zen = np.asarray(zen)
+    r = np.asarray(r)
+    x = r * np.cos(azi) * np.sin(zen)
+    y = r * np.sin(azi) * np.sin(zen)
+    z = r * np.cos(zen)
+    return x, y, z
+
+
 
 def generate_Y_kernel(azm:np.ndarray,elv:np.ndarray,N=7,dtype=None):
     """Recebe um array de coordenadas esféricas em uma esfera unitária

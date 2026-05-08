@@ -11,22 +11,41 @@ class WavenumberAnalysis:
 
     Método: A wavenumber approach to quatifying piririr pororo (Nolan, 2020)
     """
-    def __init__(self, decomp_obj:Decomposition, travel=True, ymirror=False):
+    def __init__(self, pk,dir,freq, travel=True, ymirror=False):
         """Classe utilizada para realizar operações com a decomposição em ondas planas
 
         Args:
-            decomp_obj (decompositionclass.Decomposition): O objeto de decomposição com ondas planas já calculadas
+            pk (ndarray): coeficiente complexos do espectro de  número de onda
+            dir (ndarray): Coordenadas de cada onda plana
+            freq (ndarray): Frequências para qual o campo foi desconstruido
+            travel (bool, optional): _description_. Defaults to True.
+            ymirror (bool, optional): _description_. Defaults to False.
         """
-        self.dir = decomp_obj.dir
+        self.dir = dir
         self.travel = travel
         if self.travel:
             self.dir[:,2] *= -1
         if ymirror:
             self.dir[:,1] *= -1
 
-        self.pk = decomp_obj.pk
-        self.freq = decomp_obj.controls.freq
+        self.pk = pk
+        self.freq = freq
 
+    def from_decomposition(self, decomp_obj:Decomposition,**kwargs):
+        """Inicializa a classse utilizando uma instância do insitu_sim
+
+        Args:
+            decomp_obj (Decomposition): Classe que contém os dados de decomposição 
+
+        Returns:
+            self
+        """
+        self.__init__(dir=decomp_obj.dir, 
+                      pk = decomp_obj.pk,
+                      freq=decomp_obj.controls.freq,
+                      **kwargs
+                      )
+        return self
 
     def change_travel(self,travel: bool):
         """Alterna entre direção de propagação e direção de chegada

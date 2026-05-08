@@ -5,7 +5,7 @@ from ykk_utils.signal_analysis_utilities import dsp_funcs as dsp
 import ykk_utils.signal_analysis_utilities.dsp_funcs as dsp
 from .NominalFractionalBands import ThirdOctaveBands, OctaveBands
 
-class FractionalFilter:
+class FilterBank:
     def __init__(self,fs,nthoct=1,minfreq=20,maxfreq=19.9E3,order=10,fref=1E3,autofix=True):
         """Implementa filtros de bandas fracionárias conforme IEC 61260-1:2014
 
@@ -205,4 +205,6 @@ class FractionalFilter:
                                             x=input,
                                             axis=axis)
 
+        if np.isscalar(band):
+            output = output.flatten()
         return output

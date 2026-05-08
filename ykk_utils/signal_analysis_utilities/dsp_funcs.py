@@ -181,6 +181,32 @@ def frequency_roll(input_f,fs,freq,t_shift):
     return input_f * np.exp(-1j*np.pi*2*freq*n_shift/fs)
 
 
+def chunk_split(input,chk_size,discard_padded=False):
+    """Separa sinal unidimensional em blocos de `chk_size` amostras.
+
+    Args:
+        input (ndarray): Sinal unidimensional
+        chk_size (int): número de blocos por amostra
+        discard_padded (bool, optional): 
+            Caso `len(input)` seja divisivel por `chk_size`, o código
+            realizará zero padding na entrada. Caso seja preferível
+            descartar as amostras excedentes, utilize `True`. Defaults to False.
+
+    Returns:
+        ndarray: Sinal separado em blocos, a saída possuí shape (chk_size,n_chunks)
+    """
+    in_size = len(input)
+    n_chunks = int(np.ceil(in_size/chk_size))
+
+    n_pad = int(n_chunks*chk_size-in_size)
+    input_padded = np.pad(array=input,pad_width=(0,n_pad),constant_values=0)
+    input_padded = input_padded.reshape(n_chunks,chk_size)
+    if discard_padded and n_pad:
+        return input_padded[:-1,:]
+    else:
+        return input_padded
+
+
 #Aliases
 troll = time_roll
 ftroll = frequency_roll

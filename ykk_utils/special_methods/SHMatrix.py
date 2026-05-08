@@ -72,7 +72,7 @@ class SHMatrixProcessor:
         bar = tqdm(total = n_freqs, 
                     desc = 'Decomposing...')
         
-        # Eventualmente isso aqui vai mudar...
+        # (Pretendo adicionar outros métodos de resolução, por enquanto LSQ é suficiente)
         for f in range(n_freqs):
             solution[:,f] = sh_ft.solve_LSQ(
                                             Kernel = self.Ydecomp,
@@ -109,8 +109,11 @@ class SHMatrixProcessor:
         
         #::: Processamento
         p_projected = np.zeros([dir.shape[0],n_freqs],dtype=complex)
+        bar = tqdm(total = n_freqs, desc = 'Projecting onto grid...')
         for f in range(n_freqs):
             p_projected[:,f] = Yprojct @ self.SH_decomp[0:i_end, f]
+            bar.update(1)
+        bar.close()
 
         #::: Condicionamento da saida
         if p_projected.shape[0] == 1:
