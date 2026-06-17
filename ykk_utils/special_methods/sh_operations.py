@@ -16,10 +16,10 @@ def isotropy(Amn,N=None):
         float: Coeficiente de isotropia do espectro de esféricos harmônicos
     """
     if N is None:
-        N = np.sqrt(len(Amn)) - 1
+        N = int(np.sqrt(len(Amn)) - 1)
 
     Amn_sum = np.zeros(N+1)
-    counter=0
+    counter = 0
     for n in range(0,N+1):
         for m in range(-n,n+1):
             Amn_sum[n] += np.abs(Amn[counter])

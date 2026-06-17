@@ -1,12 +1,12 @@
 import numpy as np
 from . import sh_ft, sh_operations
-from ..signal_analysis_utilities import dsp_funcs
+from ..signal_analysis import dsp_funcs
 from tqdm import tqdm
-from ..SmallScripts import tqdm_flush
-
-
+from ykk_utils.tools.waitbar import tqdm_flush
+from ykk_utils.arraybackends import ArrayBackendContext, ArrayBackendManager
+from ykk_utils.arraybackends import arr_split2d,cross_slice2d
 class SHMatrixProcessor:
-    def __init__(self, pk_mtx, dir, pk_freq=None, fs=None):
+    def __init__(self, pk_mtx, dir):
         """Uma classe que recebe uma matriz de pressões variando de
         acordo com a frequência, definidas em uma esfera, e realiza a
         decomposição em ondas planas da matriz.
@@ -54,7 +54,7 @@ class SHMatrixProcessor:
         return self
         
 
-    def decompose(self,):
+    def decompose(self,backend='numpy',chunksize=None):
         """Decompõe os dados de entrada em harmônicos esféricos.
 
         Returns:
@@ -63,23 +63,30 @@ class SHMatrixProcessor:
         if not hasattr(self,'Ydecomp'):
             raise ValueError("Kernel não inicializado, utilize generate_kernel()")
         n_dirs  = self.pk_mtx.shape[0]
-        n_freqs = self.pk_mtx.shape[1]
+        n_samples = self.pk_mtx.shape[1]
 
         n_degordr = (self.Nmax+1)**2
 
-        solution = np.zeros([n_degordr, n_freqs],dtype=complex)
+        solution = np.zeros([n_degordr, n_samples],dtype=complex)
         tqdm_flush()
-        bar = tqdm(total = n_freqs, 
+        bar = tqdm(total = n_samples, 
                     desc = 'Decomposing...')
-        
-        # (Pretendo adicionar outros métodos de resolução, por enquanto LSQ é suficiente)
-        for f in range(n_freqs):
-            solution[:,f] = sh_ft.solve_LSQ(
-                                            Kernel = self.Ydecomp,
-                                            pk_input = self.pk_mtx[:,f],
-                                            return_all = False
-                                        )
-            bar.update(1)
+
+        _kernel = (ArrayBackendManager(backend)
+                   .get_backend() #necessáro apenas pra manter docstring
+                   .to_backend(self.Ydecomp, keep_reference=False)
+                   )
+
+        for lims,chk in arr_split2d(self.pk_mtx,chunksize,axis=0):
+            # print(f'{lims} - {chk.shape}')
+            solslice = cross_slice2d(solution.ndim,start=lims[0],stop=lims[1],axis=0)
+            with ArrayBackendContext(backend) as yp:
+                _chk = yp.to_backend(chk)
+
+                _sol, _, _, _ = yp.lstsq(_kernel,_chk,rcond=None)
+                solution[solslice] = yp.to_numpy(_sol)
+            bar.update(chunksize)
+
 
         self.SH_decomp = solution
         return self
@@ -162,6 +169,9 @@ class nmIndexer:
 
 
     def __getitem__(self, key):
+        """
+        Por enquanto key não aceita slices
+        """
         n,m = key
         idx = self.parent._nm2idx(n,m)
 

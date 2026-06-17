@@ -4,9 +4,13 @@ ao calculo do Tempo de Reverberação
 import numpy as np
 from typing import overload
 
-def rcumsum(ir:np.ndarray,axis=None):
-    output = np.cumsum(np.flip(ir**2,axis=axis), axis=axis)
-    output = np.flip(output, axis=axis) / np.max(abs(output), axis=axis)
+def rcumsum(ir:np.ndarray,axis=None,normalize=True):
+    if axis is None:
+        axis = -1
+    output = np.cumsum(np.flip(ir,axis=axis), axis=axis)
+    output = np.flip(output, axis=axis) 
+    if normalize:
+        output/= np.max(abs(output), axis=axis, keepdims=True)
     return output
 
 #Computar o T20,T30, EDT

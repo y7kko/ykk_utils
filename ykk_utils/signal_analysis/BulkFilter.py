@@ -9,7 +9,7 @@ if scipy.__version__:
     pass
 
 
-class BulkFiltering:
+class BulkFilter:
     def __init__(self,Hw_mtx,fs,freq):
         self.Hw_mtx = Hw_mtx
         self.fs = fs
@@ -31,4 +31,3 @@ class BulkFiltering:
             }
         filter = signal.butter(**kwargs)
         return filter
-    

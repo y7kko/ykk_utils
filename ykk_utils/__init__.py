@@ -1,30 +1,33 @@
-from .measurement_utilities.ScannerTemplates import ScannerTemplate,DecompMacros
-from .measurement_utilities.RobotClass import RobotClass
-from .measurement_utilities.ArrayInspector import ArrayInspector
+from .measurement.ScannerTemplates import ScannerTemplate,DecompMacros
+from .measurement.RobotClass import RobotClass
+from .measurement.ArrayInspector import ArrayInspector
 
-from .signal_analysis_utilities.edc_old import ykkEDC, EDCinstancer
-from .signal_analysis_utilities.NominalFractionalBands import OctaveBands,ThirdOctaveBands
-from .signal_analysis_utilities.fractionalfilterclass import OctFilter
-from .signal_analysis_utilities import error_funcs
-from .signal_analysis_utilities.plotspectrogram import spectrogram
+from . import tools
+# from . import arraybackends
 
-from .file_management_utilities.GlobalWorkspace import GlobalWorkspace
-from .file_management_utilities import colab_tools
 
-from .ISOabsorption.ISO354checker import ISO354checker
-from .ISOabsorption.ISO354calc import ISO354
+from .file_management.GlobalWorkspace import GlobalWorkspace
+from .file_management import colab_tools
+
+# from .ISOabsorption.ISO354checker import ISO354checker
+# from .ISOabsorption.ISO354calc import ISO354
 from .PlottingLayouts import PlottingLayouts
 
+from .signal_analysis.NominalFractionalBands import OctaveBands,ThirdOctaveBands
+from .signal_analysis import error_funcs
 # TCC 1
 from .WavenumberAnalysis import WavenumberAnalysis
 from .ReconstructionErrorAnalyser import ReconstructionAnalyser
-from .signal_analysis_utilities.filter import BulkFiltering
+from .signal_analysis.BulkFilter import BulkFilter
+from .signal_analysis.FilterBank import FilterBank
+from .signal_analysis.EnergyDecayCalculator import EnergyDecayCalculator
+from .signal_analysis import dsputils, dsp_funcs
+from . import ykplot
 
-__all__ = ['OctFilter', 
-           'ykkEDC', 
+
+__all__ = [
            'EDCinstancer', 
            'WavenumberAnalysis', 
-#           'plot_map',
            'ScannerTemplates',
            'RobotClass',
            'OctaveBands',
@@ -42,8 +45,14 @@ __all__ = ['OctFilter',
             'error_funcs',
             'ReconstructionAnalyser',
             'colab_tools',
-            'bulkFiltering',
-            'plotspectrogram'
+            'BulkFilter',
+            'ykplot',
+            'FilterBank',
+            'EnergyDecayCalculator',
+            'dsputils',
+            'dsp_funcs'
+            'arraybackends',
+            'tools'
            ]
 
 __version__ = '0.0.3'

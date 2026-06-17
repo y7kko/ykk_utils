@@ -3,9 +3,9 @@ Funções para computar a decomposição em harmônicos esféricos
 """
 import numpy as np
 from scipy.special import sph_harm
+# from typing import overload
 
-
-def cart2sph(x, y, z, positive_azm=False, steady_elv=False):
+def cart2sph(x, y=None, z=None, positive_azm=False, steady_elv=False):
     """Conversion of cartesian to spherical coordinates.
         Essa função foi tirada do Spaudiopy, preferi apenas reimplementar
         para evitar a criação de mais uma dependência. 
@@ -18,7 +18,8 @@ def cart2sph(x, y, z, positive_azm=False, steady_elv=False):
 
     ## Args:
         x (_type_): 
-            _description_
+            Por gambiarra vc pode passar um vetor (ncoords,3) que ele interpreta.
+            Depois fazer algo mais elegante...
         y (_type_): 
             _description_
         z (_type_): 
@@ -36,10 +37,14 @@ def cart2sph(x, y, z, positive_azm=False, steady_elv=False):
         r   (ndarray): 
             Raio
     """
-
-    x = np.asarray(x)
-    y = np.asarray(y)
-    z = np.asarray(z)
+    if (y is not None) and (z is not None):
+        x = np.asarray(x)
+        y = np.asarray(y)
+        z = np.asarray(z)
+    else: # X na verdade é dir
+        y = x[:,1]
+        z = x[:,2]
+        x = x[:,0]
     r = np.sqrt(x**2 + y**2 + z**2)
     azm = np.arctan2(y, x)
     

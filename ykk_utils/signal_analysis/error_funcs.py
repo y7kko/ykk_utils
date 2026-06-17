@@ -155,6 +155,7 @@ class Efren:
     def spatial_epsilon(x_sol, x_truth):
         eps = np.abs(x_truth-x_sol)/np.abs(x_truth)
         return eps
+    
     @staticmethod
     def foo():
         print('bar')

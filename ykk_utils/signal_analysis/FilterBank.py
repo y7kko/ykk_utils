@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-from ykk_utils.signal_analysis_utilities import dsp_funcs as dsp
-import ykk_utils.signal_analysis_utilities.dsp_funcs as dsp
+from ykk_utils.signal_analysis import dsp_funcs as dsp
+import ykk_utils.signal_analysis.dsp_funcs as dsp
 from .NominalFractionalBands import ThirdOctaveBands, OctaveBands
 
 class FilterBank:
@@ -27,7 +27,7 @@ class FilterBank:
         self.fs = fs
         
         # Funções para banda fracionária
-        self.f_center_calculator = self.get_midfreq_expression(nthoct)
+        self.f_center_calculator = self._get_midfreq_expression(nthoct)
 
         # G^{x/b}
         x_min, x_max = self._x_minmax(freqlims=[minfreq,maxfreq],
@@ -51,10 +51,10 @@ class FilterBank:
             self.x = self.x[idx]
             # Formula empirica pra dar uma puxada pra frequência centrla
 
-        self.f_nominal = self.get_nominal_freqs(nthoct)
-        self.generate_sos_matrix()
+        self.f_nominal = self._get_nominal_freqs(nthoct)
+        self._generate_sos_matrix()
         
-    def generate_sos_matrix(self):
+    def _generate_sos_matrix(self):
         """Gera a matriz de seções de segunda ordem (biquad -- iir)
 
         ## Nota para o Bruno do futuro:
@@ -85,7 +85,7 @@ class FilterBank:
 
         self.sos_mtx = sos_mtx
 
-    def get_midfreq_expression(self,b):
+    def _get_midfreq_expression(self,b):
         """Retorna uma função para cálculo da
         frequência central correspondente ao designador de largura de banda(1/b).
         
@@ -104,7 +104,7 @@ class FilterBank:
 
         return fm_exp
 
-    def get_nominal_freqs(self,b):
+    def _get_nominal_freqs(self,b):
         """Simplesmente revoltante, mas isso implementa o Anexo E da norma...
             
             
@@ -163,7 +163,7 @@ class FilterBank:
         
         return x_min, x_max
 
-    def filter(self, input, band = None, axis=None):
+    def filter(self, input:np.ndarray, band = None, axis=None):
         """Filtra um sinal(ou múltiplos sinais) de entrada. Caso
         input tenha ndims > 1, será necessário especificar um axis
 
@@ -206,5 +206,5 @@ class FilterBank:
                                             axis=axis)
 
         if np.isscalar(band):
-            output = output.flatten()
+            output = np.squeeze(output)
         return output

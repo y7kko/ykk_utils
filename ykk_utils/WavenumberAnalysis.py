@@ -2,9 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from controlsair import AirProperties, AlgControls,cart2sph
 from decompositionclass import Decomposition
-from .signal_analysis_utilities.NominalFractionalBands import ThirdOctaveBands,OctaveBands
+from .signal_analysis.NominalFractionalBands import ThirdOctaveBands,OctaveBands
 import matplotlib.patheffects as PathEffects
-import cmcrameri.cm as cmc
 
 class WavenumberAnalysis:
     """Classe para analisar o espectro do número de onda de uma decomposição em ondas planas

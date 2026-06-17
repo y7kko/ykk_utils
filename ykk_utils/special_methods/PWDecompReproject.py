@@ -1,8 +1,19 @@
 import numpy as np
 from tqdm import tqdm
-from ykk_utils.SmallScripts import tqdm_flush
+from ykk_utils.tools.waitbar import tqdm_flush
+
 class PWDecompReproj:
     def __init__(self,dir,k0,pk):
+        """Recebe dados de uma decomposição em ondas planas e projeta em uma
+        coordenada real.
+
+        \sum P(k0,theta,phi) -> p(x,y,z)
+
+        Args:
+            dir (_type_): Vetor de coordenadas
+            k0 (_type_): Vetor de módulo do número de onda
+            pk (_type_): Matriz de coeficientes de cada onda plana
+        """
         self.dir = dir
         self.k0 = k0
         self.pk = pk
@@ -35,9 +46,9 @@ class PWDecompReproj:
         # Loop over frequency
         tqdm_flush()
         bar = tqdm(total = len(self.k0), desc = 'Reconstructing sound field...')
-        for f_idx, k in enumerate(self.k0):
+        for f_idx, k0 in enumerate(self.k0):
             # get the scaled version of the propagating directions
-            k_p = k * self.dir
+            k_p = k0 * self.dir
             # Form the new sensing matrix
             h_mtx = np.exp(-1j*coord @ k_p.T)
             # compute P and U
@@ -47,4 +58,3 @@ class PWDecompReproj:
         if self.p_recon.shape[0] == 1:
             self.p_recon = self.p_recon.flatten() 
         return self.p_recon
-

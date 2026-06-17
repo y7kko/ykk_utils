@@ -1,5 +1,5 @@
 #%%
-from ykk_utils.signal_analysis_utilities import EnergyDecayAnalyser as _EDC
+from ykk_utils.signal_analysis_utilities import EnergyDecayCalculator as _EDC
 from ykk_utils.signal_analysis_utilities import dsp_funcs as dsp
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,8 +24,8 @@ ht /= max(abs(ht))
 ht = ht[0:round(len(ht)/2)]
 t = t[0:len(ht)]
 
-EAN = _EDC.EDCAnalyser().filterConfig(fs)
-edc = EAN.EDC(band=1000,input=ht)
+EAN = _EDC.EnergyDecayCalculator().filterConfig(fs)
+edc = EAN.integrate(band=1000,input=ht)
 
 #!%%
 plt.plot(t,10*np.log10(ht**2),label='$h^2(t)$')

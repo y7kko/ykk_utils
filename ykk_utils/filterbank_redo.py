@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-from ykk_utils.signal_analysis_utilities import dsp_funcs as dsp
+from ykk_utils.signal_analysis import dsp_funcs as dsp
 from ykk_utils import ThirdOctaveBands,OctaveBands
 
 # JUST FOR DATAVIZ AND TESTING

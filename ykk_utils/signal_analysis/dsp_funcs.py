@@ -3,7 +3,10 @@
 import numpy as np
 import scipy
 from scipy import signal
-
+from tqdm import tqdm
+from ykk_utils.tools.waitbar import tqdm_flush
+from ykk_utils.arraybackends import ArrayBackendManager,ArrayBackendContext
+from ykk_utils.arraybackends import array_slicetools as arrslice
 
 def complete_missing_frequencies(input_freq:np.ndarray,
                                   input_spk:np.ndarray, fs,nonzero=True):
@@ -114,7 +117,7 @@ def generate_time_vector(data,fs):
     return time_vector
 
 
-def ifft_trunc(input_spk,freq,fs,normalize=True):
+def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_size=None):
     """Realiza a ifft de um espectro truncado.
     À parte não definida pelo sinal de entrada, são atribuidos zeros.
 
@@ -123,18 +126,52 @@ def ifft_trunc(input_spk,freq,fs,normalize=True):
         input_spk (ndarray): Espectro truncado
         freq (ndarray): Frequências do espectro truncado len(freq)==len(input_spk)
         fs (int): Taxa de amostragem
-
+        axis (int): A dimensão em que o código deve operar
+            Obs: No momento o axis está hardcoded e assume que a entrada 
+            possui shape (dir, freq) ou (freq,)
     Returns:
         _type_: O sinal no tempo
     """
-    spk_full = complete_missing_frequencies(input_freq = freq,
-                                            input_spk = input_spk,
-                                            fs = fs
-                                            )
-    out_t = np.fft.irfft(spk_full)
+    input_is_unidimensional = False
+    if input_spk.ndim == 1:
+        input_is_unidimensional = True
+    
+
+    if input_is_unidimensional:
+        spk_full = complete_missing_frequencies(input_freq = freq,
+                                                input_spk = input_spk,
+                                                fs = fs
+                                                )
+    else:
+        full_freq = generate_frequency_vector(fs=fs,input_freq=freq,half_spectrum=True)
+        spk_full = np.zeros([input_spk.shape[0], len(full_freq)],dtype=complex)
+        print('::: Spk Pad')
+        for ir_idx in range(input_spk.shape[0]):
+            current_spk = input_spk[ir_idx, :]
+            spk_full[ir_idx,:] = complete_missing_frequencies(input_freq = freq,
+                                                input_spk = current_spk,
+                                                fs = fs
+                                                )
+    out_shape = list(spk_full.shape)
+    out_shape[axis] = 2*(out_shape[axis]-1) 
+    out_t = np.zeros(out_shape)
+
+    tqdm_flush()
+    bar = tqdm(total=out_t.shape[int(not axis)])
+    for lims, chunk in arrslice.arr_split2d(spk_full, chunk_size, axis=axis):
+        idxs = arrslice.cross_slice2d(out_t.ndim, lims[0],lims[1],axis=axis)
+
+        with ArrayBackendContext(backend) as yp:
+            spk_part = yp.to_backend(chunk)     
+            chk_ifft = yp.irfft(spk_part, axis=axis) 
+            out_t[idxs] = yp.to_numpy(chk_ifft) # casts backend type into ndarray
+        bar.update(chunk_size)
+    
     if normalize:
-        out_t /= np.amax(out_t)
+        out_t = ArrayBackendManager('numpy').norm_max(out_t,axis=axis) 
+    
     return out_t
+
 
 def time_roll(input_t,fs,t_shift,axis=None):
     """Faz um shift circular no array
