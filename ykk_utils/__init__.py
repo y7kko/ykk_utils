@@ -3,7 +3,7 @@ from .measurement.RobotClass import RobotClass
 from .measurement.ArrayInspector import ArrayInspector
 
 from . import tools
-# from . import arraybackends
+from . import arraybackends
 
 
 from .file_management.GlobalWorkspace import GlobalWorkspace
