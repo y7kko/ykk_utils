@@ -2,7 +2,8 @@ from .array_backend_core import array_backend
 from .array_backend_base import ArrayBackendBase
 import numpy as np
 from functools import wraps
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_coeffs
+import scipy.ndimage as ndimage
 
 @array_backend('numpy')
 class numpy_backend(ArrayBackendBase):
@@ -35,6 +36,16 @@ class numpy_backend(ArrayBackendBase):
     def free_mem(arr:np.ndarray):
         #I think python memory management already handles it well
         pass
+
+    @classmethod
+    def savgol_coeffs(cls,window_length, polyorder, deriv=0, delta=1.0,**kwargs):
+        coeffs = savgol_coeffs(window_length, polyorder, deriv=deriv, delta=delta)
+        return cls.to_backend(coeffs)
+    
+    @wraps(ndimage.convolve1d)
+    def conv1d(x,weights,axis=-1,mode='mirror',cval=0.0,**kwargs):
+        return ndimage.convolve1d(x,weights,axis=axis,mode=mode,cval=cval)
+
 
     @classmethod
     def __getattr__(cls, key):

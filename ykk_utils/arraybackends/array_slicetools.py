@@ -1,9 +1,10 @@
 #%%
 import warnings
 
-
+from ykk_utils.tools.waitbar import tqdm_flush
+from tqdm import tqdm
 class arr_split2d:
-    def __init__(self,array,step=None,axis=-1,return_limits=True):
+    def __init__(self,array,step=None,axis=-1,return_limits=True,waitbar=True):
         """Um simples iterador que divide uma matriz em vários
         slices de step amostras.
 
@@ -35,7 +36,7 @@ class arr_split2d:
 
 
         self.stop_max = self.array.shape[self.slice_axis]
-        
+        self.waitbar = waitbar
         if self.slice_axis >= self.ndim:
             raise ValueError('Algum problema em')
         # checking if step value is valid
@@ -52,10 +53,12 @@ class arr_split2d:
         self.iteration_end_flag = False
 
     def __iter__(self):
+        self._waitbar_init()
         return self
     
     def __next__(self):
         if self.iteration_end_flag:
+            self._waitbar_deinit()
             raise StopIteration
 
         self.start += self.step
@@ -70,12 +73,32 @@ class arr_split2d:
                                         )
 
 
+        self._waitbar_add(self.stop-self.start)
+
         if not self.return_limits:
             return self.array[arr_slice]
         else:
             return tuple([[self.start,self.stop] ,
                          self.array[arr_slice]])
 
+
+
+    def _waitbar_init(self):
+        if self.step is not None and self.waitbar:
+            tqdm_flush()
+            self.wait = tqdm(total=self.stop_max)
+        pass
+
+    def _waitbar_add(self,val):
+        val = int(val)
+        if self.step is not None:
+            self.wait.update(val)
+        pass
+
+    def _waitbar_deinit(self):
+        if self.step is not None:
+            self.wait.close()
+        self.wait = None
 
 def cross_slice2d(ndim,start=None,stop=None,step=None,axis=-1):
     slice_axis = int(not axis) #slice em que ocorre as iterações

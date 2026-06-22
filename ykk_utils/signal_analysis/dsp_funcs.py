@@ -156,16 +156,16 @@ def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_s
     out_shape[axis] = 2*(out_shape[axis]-1) 
     out_t = np.zeros(out_shape)
 
-    tqdm_flush()
-    bar = tqdm(total=out_t.shape[int(not axis)])
-    for lims, chunk in arrslice.arr_split2d(spk_full, chunk_size, axis=axis):
+    # tqdm_flush()
+    # bar = tqdm(total=out_t.shape[int(not axis)])
+    for lims, chunk in arrslice.arr_split2d(spk_full, chunk_size, axis=axis,waitbar=True):
         idxs = arrslice.cross_slice2d(out_t.ndim, lims[0],lims[1],axis=axis)
 
         with ArrayBackendContext(backend) as yp:
             spk_part = yp.to_backend(chunk)     
             chk_ifft = yp.irfft(spk_part, axis=axis) 
             out_t[idxs] = yp.to_numpy(chk_ifft) # casts backend type into ndarray
-        bar.update(chunk_size)
+        # bar.update(chunk_size)
     
     if normalize:
         out_t = ArrayBackendManager('numpy').norm_max(out_t,axis=axis) 

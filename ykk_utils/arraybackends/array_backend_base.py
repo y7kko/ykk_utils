@@ -1,11 +1,19 @@
 # from typing import Protocol
 from collections.abc import Iterable
 from abc import ABC, abstractmethod
-import numpy as np
+from functools import wraps
+
 import weakref
 import gc
 
+import numpy as np
+from scipy.signal import savgol_coeffs
 class ArrayBackendBase(ABC):
+    """ Provides memory management system and documentation for 
+    default functions. 
+
+
+    """
     _arr_reflist = None
     _reflist_enabled = False
     
@@ -16,8 +24,9 @@ class ArrayBackendBase(ABC):
         """
         if cls._reflist_enabled:
             return
-        cls._arr_reflist = []
-        cls._reflist_enabled =True
+        else: #redundante mas mais legível
+            cls._arr_reflist = []
+            cls._reflist_enabled =True
 
     @classmethod
     def reflist_deinit(cls,):
@@ -27,8 +36,7 @@ class ArrayBackendBase(ABC):
         if not cls._reflist_enabled:
             return
 
-        cls._reflist_enabled = False
-        if cls._reflist_enabled == 0:
+        if cls._reflist_enabled:
             for ref in cls._arr_reflist:
                 arr = ref()
                 if arr is None:
@@ -36,7 +44,9 @@ class ArrayBackendBase(ABC):
                     break
                 else:
                     cls.free_mem(arr)
+
             del(cls._arr_reflist)
+            cls._reflist_enabled = False
 
     @classmethod
     def reflist_add(cls,arr):
@@ -63,8 +73,9 @@ class ArrayBackendBase(ABC):
 
         for ref in cls._arr_reflist[:]:
             if ref() is arr:
-                cls._arr_reflist.remove(ref)
+                cls._arr_reflist.remove(arr)
                 break
+
 
     @abstractmethod
     def to_backend(arr:np.ndarray,keep_reference=True,**kwargs):
@@ -78,7 +89,7 @@ class ArrayBackendBase(ABC):
                 false, it will be necessary to call yp.free_mem(arr).
                 Defaults to True
         """
-        pass
+        raise NotImplementedError("Backend lacks a '.to_backend()' method")
 
     @abstractmethod
     def to_numpy(arr,**kwargs) -> np.ndarray: 
@@ -91,7 +102,7 @@ class ArrayBackendBase(ABC):
         Returns:
             np.ndarray: Numpy array
         """
-        pass
+        raise NotImplementedError("Backend lacks a '.to_numpy()' method")
 
     @abstractmethod
     def free_mem(arr):
@@ -100,4 +111,9 @@ class ArrayBackendBase(ABC):
         Args:
             arr (_type_): _description_
         """
+        # raise NotImplementedError("Backend lacks free_mem method")
+
+    @abstractmethod
+    @wraps(savgol_coeffs)
+    def savgol_coeffs():
         pass

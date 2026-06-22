@@ -69,8 +69,11 @@ class ArrayBackendManager():
     def get_backend(self,key=None) -> ArrayBackendBase:
         if key:
             return backend_collection[key]
+        elif self.backend_key is not None:
+            return backend_collection[self.backend_key]
         else:
-            return backend_collection[self.backend_key]    
+            warnings.warn(f"Backend not found, using '{self.fallback_key}' instead.")
+            return backend_collection[self.fallback_key]
     
     def __str__(self):
         return str(list(backend_collection.keys()))
@@ -84,7 +87,8 @@ class ArrayBackendManager():
         else:
             raise AttributeError(f"'{attr}' does not exist in '{self.backend_key}' nor '{self.fallback_key}' backends")
         
-        method = getattr(self.get_backend(key), attr)
+        backend_object:ArrayBackendBase = self.get_backend(key)
+        method = getattr(backend_object, attr)
         
         #tentando manter metadados do método
         @wraps(method)
