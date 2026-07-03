@@ -46,7 +46,6 @@ class numpy_backend(ArrayBackendBase):
     def conv1d(x,weights,axis=-1,mode='mirror',cval=0.0,**kwargs):
         return ndimage.convolve1d(x,weights,axis=axis,mode=mode,cval=cval)
 
-
     @classmethod
     def __getattr__(cls, key):
         """PS:CHATGPTADO"""

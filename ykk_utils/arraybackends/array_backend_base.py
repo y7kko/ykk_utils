@@ -14,8 +14,8 @@ class ArrayBackendBase(ABC):
 
 
     """
-    _arr_reflist = None
-    _reflist_enabled = False
+    _arr_reflist:list = None
+    _reflist_enabled:bool = False
     
     @classmethod
     def reflist_init(cls):
@@ -73,8 +73,10 @@ class ArrayBackendBase(ABC):
 
         for ref in cls._arr_reflist[:]:
             if ref() is arr:
-                cls._arr_reflist.remove(arr)
+                cls._arr_reflist.remove(ref)
                 break
+            elif ref() is None:
+                cls._arr_reflist.remove(ref)
 
 
     @abstractmethod

@@ -54,7 +54,7 @@ class EnergyDecayCalculator:
             input = self.ht
         
         output = self._filterSignal(input, band, axis = axis, normalize = normalize)
-        output = self._rcumsum(output, axis = axis, normalize = normalize)
+        output = self._rcumsum(output**2, axis = axis, normalize = normalize)
         print(output.shape)
 
         if smoothing_time is not None:
@@ -71,8 +71,6 @@ class EnergyDecayCalculator:
                                                                 keep_reference = False
                                                                 )
             
-            # tqdm_flush()
-            # bar = tqdm(total=output.shape[int(not axis)])
             for lims, chunk in arrslice.arr_split2d(output, chunk_size, axis=saxis,waitbar=True):
                 idxs = arrslice.cross_slice2d(output.ndim, lims[0], lims[1],axis= saxis)
 
@@ -80,18 +78,18 @@ class EnergyDecayCalculator:
                     output_chk = yp.to_backend(chunk)
                     smoothed_chk  = yp.conv1d(output_chk, kernel,axis=saxis, mode='mirror')
                     output[idxs] = yp.to_numpy(smoothed_chk)
-                # bar.update(chunk_size)
-                
             ArrayBackendManager(backend).free_mem(kernel)
-
+          
             # if smooth_method == 'pyfor':
             #     output = _savgol_pyfor(output,winsize,)
             # elif smooth_method == 'direct':
-            #     output = savgol_filter(output,
-            #                         window_length=winsize,
-            #                         polyorder=2,
-            #                         axis=saxis,
-            #                         mode='mirror')
+          
+            # output = savgol_filter(output,
+            #                     window_length=winsize,
+            #                     polyorder=2,
+            #                     axis=-1,
+            #                     mode='interp')
+
 
         return output
 

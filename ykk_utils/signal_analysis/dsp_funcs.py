@@ -80,7 +80,9 @@ def generate_frequency_vector(fs,nfft=None,df=None,input_freq=None,half_spectrum
                 raise ValueError("Apenas um dos parâmetros (df ou input_freq) deve ser fornecido")
         nfft = int(fs/df) # tamanho total do vetor que eu quero 
 
-    out_freq = np.linspace(0, (nfft-1)*fs/nfft, nfft)
+
+    # ((nfft-1)/nfft)*fs Evita overflow se comparado a (nfft-1)*fs/nfft
+    out_freq = np.linspace(0, ((nfft-1)/nfft)*fs, nfft)
 
     # Caso eu queira f = [0 : nyquist]
     if half_spectrum:
@@ -156,16 +158,13 @@ def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_s
     out_shape[axis] = 2*(out_shape[axis]-1) 
     out_t = np.zeros(out_shape)
 
-    # tqdm_flush()
-    # bar = tqdm(total=out_t.shape[int(not axis)])
     for lims, chunk in arrslice.arr_split2d(spk_full, chunk_size, axis=axis,waitbar=True):
         idxs = arrslice.cross_slice2d(out_t.ndim, lims[0],lims[1],axis=axis)
 
         with ArrayBackendContext(backend) as yp:
             spk_part = yp.to_backend(chunk)     
-            chk_ifft = yp.irfft(spk_part, axis=axis) 
+            chk_ifft = yp.irfft(spk_part, axis=axis)
             out_t[idxs] = yp.to_numpy(chk_ifft) # casts backend type into ndarray
-        # bar.update(chunk_size)
     
     if normalize:
         out_t = ArrayBackendManager('numpy').norm_max(out_t,axis=axis) 

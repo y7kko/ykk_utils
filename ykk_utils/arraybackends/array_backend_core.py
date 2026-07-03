@@ -3,9 +3,8 @@ import warnings
 from functools import wraps
 import numpy as np
 from .array_backend_base import ArrayBackendBase
-from ._backend_collection import backend_collection
 
-# _backend_collection = {}
+_backend_collection = {}
 # _backend_attrs = {}
 
 
@@ -27,11 +26,11 @@ def array_backend(name:str=None):
 
         ArrayBackendManager('foo').a()
     """
-    print(f'called {name} 2')
+    # print(f'called {name} 2')
     def decorate(cls):
         key = name if name else cls.__name__
-        print(key)
-        backend_collection[key] = cls
+        # print(key)
+        _backend_collection[key] = cls
         # _backend_attrs[key] = list(prop for prop in dir(cls) if not prop.startswith('__'))
         return cls
     
@@ -68,20 +67,25 @@ class ArrayBackendManager():
 
     def get_backend(self,key=None) -> ArrayBackendBase:
         if key:
-            return backend_collection[key]
+            return _backend_collection[key]
         elif self.backend_key is not None:
-            return backend_collection[self.backend_key]
+            return _backend_collection[self.backend_key]
         else:
             warnings.warn(f"Backend not found, using '{self.fallback_key}' instead.")
-            return backend_collection[self.fallback_key]
+            return _backend_collection[self.fallback_key]
     
     def __str__(self):
-        return str(list(backend_collection.keys()))
+        keys = list(_backend_collection.keys())
+        output = ''
+        output += ('''::: ArrayBackendManager\nList o available backends:\n''')
+        for key in keys:
+            output += f'  - {key}\n'
+        return output
 
     def __getattr__(self, attr):
-        if hasattr(backend_collection[self.backend_key], attr):
+        if hasattr(_backend_collection[self.backend_key], attr):
             key = self.backend_key
-        elif hasattr(backend_collection[self.fallback_key], attr):
+        elif hasattr(_backend_collection[self.fallback_key], attr):
             key = self.fallback_key
             warnings.warn(f"'{attr}' does not exist in '{self.backend_key}' backend, using '{key}' instead")
         else:
@@ -98,11 +102,4 @@ class ArrayBackendManager():
         return wrapper
     
     def __repr__(self):
-        keys = list(backend_collection.keys())
-        output = ''
-        output=output+('''::: ArrayBackendManager
-              List o available backends:\n
-              ''')
-        for key in keys:
-            output +=print(f'  - {key}\n')
-        return output
+        return self.__str__()

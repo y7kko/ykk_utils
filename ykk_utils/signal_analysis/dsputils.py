@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def dB(input,ref=1,squared_input=False):
+def dB(input,squared_input=False,ref=1):
     input = np.asarray(input)
     if squared_input:
         mult=10
