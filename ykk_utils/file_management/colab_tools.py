@@ -84,6 +84,7 @@ class colabrw():
                 'dir':  file['dir'][:],
                 'freq': file['freq'][:],
                 'k0':   file['k0'][:],
+                'lambdavec': file['lambdavec'][:],
                 'fs':   file['fs'][()],
             }
         else:
