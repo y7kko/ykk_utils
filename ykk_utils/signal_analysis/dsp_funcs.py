@@ -232,11 +232,17 @@ def chunk_split(input,chk_size,discard_padded=False):
         ndarray: Sinal separado em blocos, a saída possuí shape (chk_size,n_chunks)
     """
     in_size = len(input)
+    
     n_chunks = int(np.ceil(in_size/chk_size))
 
     n_pad = int(n_chunks*chk_size-in_size)
-    input_padded = np.pad(array=input,pad_width=(0,n_pad),constant_values=0)
+    input_padded = np.pad(array = input,
+                          pad_width = (0,n_pad),
+                          constant_values = 0
+                          )
+    
     input_padded = input_padded.reshape(n_chunks,chk_size)
+    
     if discard_padded and n_pad:
         return input_padded[:-1,:]
     else:

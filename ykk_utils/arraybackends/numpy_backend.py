@@ -46,6 +46,31 @@ class numpy_backend(ArrayBackendBase):
     def conv1d(x,weights,axis=-1,mode='mirror',cval=0.0,**kwargs):
         return ndimage.convolve1d(x,weights,axis=axis,mode=mode,cval=cval)
 
+    def chunk_split2d(input,chk_size,axis=-1,discard_padded=False):
+        in_len = input.shape[axis]
+        n_chunks = int(np.ceil(in_len/chk_size))
+        n_spl_to_pad = int(n_chunks*chk_size-in_len)
+        
+        if discard_padded and n_spl_to_pad:
+            n_chunks -= 1
+            idx_to_keep = [slice(None)]*input.ndim
+            idx_to_keep[axis] = slice(int(n_chunks*chk_size))
+            input_padded = input[tuple(idx_to_keep)]        
+        elif n_spl_to_pad:
+            pad_width = np.zeros([input.ndim, 2],dtype=int)
+            pad_width[axis,:] = [0, n_spl_to_pad] #[before,after] signal
+            input_padded = np.pad(array = input,
+                                pad_width = pad_width,
+                                constant_values = 0
+                                )
+
+        new_shape = np.asarray(input.shape)
+        new_shape[axis] = n_chunks
+        new_shape = np.append(new_shape,chk_size)
+        input_chk = input_padded.reshape(new_shape)
+
+        return input_chk
+
     @classmethod
     def __getattr__(cls, key):
         """PS:CHATGPTADO"""

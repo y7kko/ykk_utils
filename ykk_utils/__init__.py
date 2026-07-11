@@ -5,6 +5,10 @@ from .measurement.ArrayInspector import ArrayInspector
 from . import tools
 from . import arraybackends
 
+from .signal_analysis import dsputils, dsp_funcs
+from .signal_analysis.BulkFilter import BulkFilter
+from .signal_analysis.FilterBank import FilterBank
+from .signal_analysis.EnergyDecayCalculator import EnergyDecayCalculator
 
 from .file_management.GlobalWorkspace import GlobalWorkspace
 from .file_management import colab_tools
@@ -18,10 +22,6 @@ from .signal_analysis import error_funcs
 # TCC 1
 from .WavenumberAnalysis import WavenumberAnalysis
 from .ReconstructionErrorAnalyser import ReconstructionAnalyser
-from .signal_analysis.BulkFilter import BulkFilter
-from .signal_analysis.FilterBank import FilterBank
-from .signal_analysis.EnergyDecayCalculator import EnergyDecayCalculator
-from .signal_analysis import dsputils, dsp_funcs
 from . import ykplot
 
 

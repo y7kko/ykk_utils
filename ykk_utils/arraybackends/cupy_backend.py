@@ -5,7 +5,6 @@ from .array_backend_core import array_backend,keep_reference
 from .array_backend_base import ArrayBackendBase
 
 import cupy as cp
-import numpy as np
 from scipy.signal import savgol_coeffs
 from cupyx.scipy import ndimage
 from cupyx import linalg
@@ -54,7 +53,32 @@ class cupy_backend(ArrayBackendBase):
     @keep_reference
     def lstsq(cls,*args,**kwargs):
         return cp.linalg.lstsq(*args,**kwargs)
-    
+
+    @keep_reference    
+    def chunk_split2d(cls,input,chk_size,axis=-1,discard_padded=False):
+        in_len = input.shape[axis]
+        n_chunks = int(cp.ceil(in_len/chk_size))
+        n_spl_to_pad = int(n_chunks*chk_size-in_len)
+                
+        if discard_padded and n_spl_to_pad:
+            n_chunks -= 1
+            idx_to_keep = [slice(None)]*input.ndim
+            idx_to_keep[axis] = slice(int(n_chunks*chk_size))
+            input_padded = input[tuple(idx_to_keep)]        
+        elif n_spl_to_pad:
+            pad_width = cp.zeros([input.ndim, 2],dtype=int)
+            pad_width[axis,:] = [0, n_spl_to_pad] #[before,after] signal
+            input_padded = cp.pad(array = input,
+                                pad_width = pad_width,
+                                constant_values = 0
+                                )
+
+        new_shape = cp.asarray(input.shape)
+        new_shape[axis] = n_chunks
+        new_shape = cp.append(new_shape,chk_size)
+        input_chk = input_padded.reshape(new_shape)
+        
+        return input_chk
 
     @keep_reference
     def savgol_coeffs(cls,window_length, polyorder, deriv=0, delta=1.0,**kwargs):
