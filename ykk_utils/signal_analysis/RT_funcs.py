@@ -4,11 +4,8 @@ ao calculo do Tempo de Reverberação
 import numpy as np
 from typing import overload
 
-from ykk_utils import dsp_funcs as dsp
-from ykk_utils.arraybackends import ArrayBackendManager,ArrayBackendContext
-from ykk_utils.arraybackends import array_slicetools as arrslice
 
-def rcumsum(ir:np.ndarray,axis=None,normalize=True):
+def rcumsum(ir:np.ndarray,axis=None,normalize=False):
     if axis is None:
         axis = -1
     output = np.cumsum(np.flip(ir,axis=axis), axis=axis)
@@ -78,99 +75,3 @@ def tr_extrapolate(a,b,L = 60):
     return ( (-L) - b) / a
 
 
-# modified lundeby method
-def modified_lundeby(ht,fs,axis=-1,backend='numpy',chunk_size=None):
-    raise NotImplementedError('Ainda não terminei de implementar')
-
-    dB = lambda x: 10*np.log10(x)    
-    t = dsp.tvec(len(ht),fs)
-
-    edc_mtx = np.zeros(ht.shape)
-    for lims, chunk in arrslice.arr_split2d(ht, chunk_size, axis=axis,waitbar=True):
-        idxs = arrslice.cross_slice2d(edc_mtx.ndim, lims[0],lims[1],axis=axis)
-
-        with ArrayBackendContext(backend) as yp:
-            ynp = ArrayBackendManager(backend).get_backend()
-            chk_size = int(10E-3*fs)
-            ht_chk = yp.chunk_split2d(chunk,chk_size=chk_size)
-            
-            # Falta um método de calcular rms, acreidto que
-            # a melhor forma seja na verdade uma forma de obter
-            # o namespace de arrays (np,cp), ao invés de sair
-            # implementando coisa adoidado
-            # ht_chk = 
-
-    # Parei aqui
-    # yp.chunk_split2d(ht,chk_size=chk_size,discard_padded=True)
-    ht_chk = dsp.chunk_split(ht,chk_size=chk_size,discard_padded=True)
-    ht_chk = np.sqrt(np.mean(ht_chk**2,axis=1))
-    t_chk = dsp.chunk_split(t,chk_size=chk_size,discard_padded=True)
-    t_chk = np.mean(t_chk,axis=1)
-
-    noise_est_len = int(len(t_chk)*.01)
-    noise_est = np.sqrt(np.mean(ht_chk[-noise_est_len:]**2))
-
-    reg_idx = np.where(
-        dB(ht_chk**2)>=(dB(noise_est**2)+5)
-        )[0]
-
-    a, b = np.polyfit(x=t_chk[reg_idx],
-                    y=dB(ht_chk[reg_idx]), deg=1)
-
-    chk_size = int((-10/(5*a))*fs) #(5/10) blocks/dB
-    ht_chk = dsp.chunk_split(ht,chk_size=chk_size,discard_padded=True)
-    ht_chk = np.sqrt(np.mean(ht_chk**2,axis=1))
-    t_chk = dsp.chunk_split(t,chk_size=chk_size,discard_padded=True)
-    t_chk = np.mean(t_chk,axis=1)
-
-    knee_idx = _knee_maxchord(t_chk,ht_chk)
-
-    # Ajustar uma reta entre t=0 e tn tal que h^2(tn)=noise+10dB.
-    # A partir disso, extrapolar após região de truncamento para
-    # compensar o truncamento por ruído
-    max_reg_idx = np.where(
-            dB(ht_chk) >= #h(t)
-            dB(np.sum(ht_chk[knee_idx:]**2)) + 10 #noise estimation + 10dB
-        )[0][-1]
-    a, b = np.polyfit(x=t_chk[:max_reg_idx],
-                    y=dB(ht_chk[:max_reg_idx]), deg=1)
-    # O valor de truncamento
-    Ccomp = np.sum(10**((a*t_chk[knee_idx:]+b)/10))
-    
-    return t_chk[knee_idx], Ccomp
-
-def _knee_maxchord(x,y,axis=-1):
-    """Retorna indíce onde se encontra knee point utilizando 
-    implementação (empírica) de TMDSM. O método considera a inflexão 
-    como o ponto de maior distância perpendicular à um segmento de 
-    reta formado por (x0,y0) e (xn,yn), em que n representa o 
-    último par ordenado do meu conjunto de dados.
-
-    A distância entre ponto e reta, então, é determinada por
-    formula clássica da geometria analítica [1]. Como os dados são
-    normalizados a priori, e a magnitude da distância é irrelevante ao problema, 
-    pode-se reduzir a equação
-        ```
-        d = abs((y[-1]-y[0])*x -(x[-1]-x[0])*y + x[-1]*y[0] -y[-1]*x[0])
-        d /= np.sqrt((y[-1] - y[0])**2 + (x[-1] - x[0])**2)
-        return d.argmax()
-        ```
-    por
-        ```
-        d = abs(x+y).argmin(),
-        ```
-    Args:
-        x (ndarray): Valores de x
-        y (ndarray): Valores de y
-
-    Returns:
-        int: índice em que se encontra ponto de inflexão geométrico.
-
-    References:
-        Ref [1]: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
-    """
-    np_kw = dict(axis=axis,keepdims=True)
-    # Normalizing x and y
-    x = (x - np.min(x,**np_kw)) / (np.max(x,**np_kw) - np.min(x,**np_kw))
-    y = (y - np.min(y,**np_kw)) / (np.max(y,**np_kw) - np.min(y,**np_kw))    
-    return abs(x+y).argmin()

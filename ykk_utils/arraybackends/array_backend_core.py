@@ -3,9 +3,11 @@ import warnings
 from functools import wraps
 import numpy as np
 from .array_backend_base import ArrayBackendBase
+from typing import Tuple
 
 _backend_collection = {}
 # _backend_attrs = {}
+import numpy as np
 
 
 def array_backend(name:str=None):
@@ -65,15 +67,24 @@ class ArrayBackendManager():
         self.backend_key = backend_key
         self.fallback_key = fallback_key
 
-    def get_backend(self,key=None) -> ArrayBackendBase:
-        if key:
-            return _backend_collection[key]
-        elif self.backend_key is not None:
+    def get_backend(self) -> ArrayBackendBase:
+        if self.backend_key is not None:
             return _backend_collection[self.backend_key]
         else:
             warnings.warn(f"Backend not found, using '{self.fallback_key}' instead.")
             return _backend_collection[self.fallback_key]
     
+    #Gambiarra para manter o autocompletion
+    def get_backend_namespace(self,) -> np:
+        """Todo:
+        adicionar comportamento do tipo
+        get_backend_namespace()
+
+        Returns:
+            _type_: _description_
+        """
+        return self.get_backend()._arrprefix
+
     def __str__(self):
         keys = list(_backend_collection.keys())
         output = ''

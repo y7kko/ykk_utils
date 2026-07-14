@@ -4,9 +4,12 @@ import numpy as np
 from functools import wraps
 from scipy.signal import savgol_coeffs
 import scipy.ndimage as ndimage
-
+import scipy
 @array_backend('numpy')
 class numpy_backend(ArrayBackendBase):
+    _arrprefix = np
+    _sciprefix = scipy
+
     @wraps(np.asarray)
     @classmethod
     def to_backend(cls,arr,**kwargs):
@@ -63,6 +66,8 @@ class numpy_backend(ArrayBackendBase):
                                 pad_width = pad_width,
                                 constant_values = 0
                                 )
+        else:
+            input_padded = input
 
         new_shape = np.asarray(input.shape)
         new_shape[axis] = n_chunks

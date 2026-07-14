@@ -5,6 +5,7 @@ from .array_backend_core import array_backend,keep_reference
 from .array_backend_base import ArrayBackendBase
 
 import cupy as cp
+import cupyx.scipy as scp
 from scipy.signal import savgol_coeffs
 from cupyx.scipy import ndimage
 from cupyx import linalg
@@ -22,6 +23,8 @@ class cupy_backend(ArrayBackendBase):
         compatible with scipy and numpy, implementing it twice lets
         ArrayBackendContext manage memmory more easily
     """
+    _arrprefix = cp
+    _sciprefix = scp
     @keep_reference
     @wraps(cp.asarray)
     def to_backend(cls,arr,**kwargs):
@@ -56,6 +59,7 @@ class cupy_backend(ArrayBackendBase):
 
     @keep_reference    
     def chunk_split2d(cls,input,chk_size,axis=-1,discard_padded=False):
+        
         in_len = input.shape[axis]
         n_chunks = int(cp.ceil(in_len/chk_size))
         n_spl_to_pad = int(n_chunks*chk_size-in_len)
@@ -72,12 +76,14 @@ class cupy_backend(ArrayBackendBase):
                                 pad_width = pad_width,
                                 constant_values = 0
                                 )
+        else:
+            input_padded = input
 
         new_shape = cp.asarray(input.shape)
         new_shape[axis] = n_chunks
         new_shape = cp.append(new_shape,chk_size)
         input_chk = input_padded.reshape(new_shape)
-        
+
         return input_chk
 
     @keep_reference

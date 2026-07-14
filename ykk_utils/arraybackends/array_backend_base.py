@@ -14,9 +14,15 @@ class ArrayBackendBase(ABC):
 
 
     """
+
     _arr_reflist:list = None
     _reflist_enabled:bool = False
     
+    # Armazenar namespaces preferidos para lidar com arrays (numpy por exemplo)
+    # e funções específicas de computação cientifica(scipy por exemplo)
+    _arrprefix = None
+    _sciprefix = None
+
     @classmethod
     def reflist_init(cls):
         """Initializes array references list
@@ -119,3 +125,20 @@ class ArrayBackendBase(ABC):
     @wraps(savgol_coeffs)
     def savgol_coeffs():
         pass
+
+    @abstractmethod
+    def chunk_split2d(input,chk_size,axis=-1,discard_padded=False):
+       """Separa sinal unidimensional em blocos de `chk_size` amostras.
+
+        Args:
+            input (ndarray): Sinal unidimensional
+            chk_size (int): número de blocos por amostra
+            axis (int): O eixo do vetor que será separado em blocos. Defaults to -1.
+            discard_padded (bool, optional): 
+                Caso `len(input)` seja divisivel por `chk_size`, o código
+                realizará zero padding na entrada. Caso seja preferível
+                descartar as amostras excedentes, utilize `True`. Defaults to False.
+
+        Returns:
+            ndarray: Sinal separado em blocos, a saída possuí shape (chk_size,n_chunks)
+        """

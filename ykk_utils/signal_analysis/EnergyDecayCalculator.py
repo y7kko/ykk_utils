@@ -10,7 +10,8 @@ from tqdm import tqdm
 from ykk_utils.arraybackends import ArrayBackendManager, ArrayBackendContext
 from ykk_utils.arraybackends import array_slicetools as arrslice
 from ykk_utils.tools.waitbar import tqdm_flush
-
+from ykk_utils.signal_analysis import dsp_funcs as dsp
+from ykk_utils.signal_analysis.noisefloor.lundeby_unvectorized import lundeby_unvec
 """Todo: 
 - Normalizar depois de filtrar...
 
@@ -47,48 +48,63 @@ class EnergyDecayCalculator:
         return self
 
 
-    def integrate(self, input = None, band=None, axis=None, 
+    def integrate(self, input = None, band=None, axis=-1, 
                   smoothing_time=None, normalize=False,
-                  backend='numpy',chunk_size=None):
+                  backend='numpy',chunk_size=None,noise_detection_method:str='lundeby'):
         if input is None:
             input = self.ht
         
+        print('Filtering')
         output = self._filterSignal(input, band, axis = axis, normalize = normalize)
-        output = self._rcumsum(output**2, axis = axis, normalize = normalize)
-        print(output.shape)
+        if noise_detection_method is None:
+            output = self._rcumsum(output**2, axis = axis, normalize = False)
+        elif noise_detection_method.lower() =='lundeby':
+            print('Lundeby')
+            t = dsp.tvec(output.shape[axis],self.fs)
+            t_cross, C_comp = lundeby_unvec(ht=output,
+                                            fs=self.fs,
+                                            axis=(-1 if axis == None else axis)
+                                            )
+            # Truncar a matriz
+            print(t_cross.shape)
+            print(C_comp.shape)
+            max_t_idx = abs(t-t_cross.max()).argmin()
+            print(f"Truncando no indice {max_t_idx}: {t[max_t_idx]}")
+            t = t[:max_t_idx]
+            out_trunc_slice = [slice(None)]*output.ndim
+            out_trunc_slice[axis] = slice(0,max_t_idx)
+            output = output[tuple(out_trunc_slice)]
+
+            print('EDC')
+            #fdc por enquanto vai assim msm
+            # for idx in range(3):
+            for idx in range(output.shape[0]):
+                tmask = np.where(t<t_cross[idx])[0]
+
+                output[idx,tmask] = self._rcumsum(output[idx,tmask]**2, normalize = False)
+                output[idx,t >= t_cross[idx]] = 0
+            
+            output += C_comp
 
         if smoothing_time is not None:
             print('Smoothing')
             winsize = int(self.fs*smoothing_time)
             if winsize%2 ==0:
-                winsize +=1
-            if axis is None:
-                saxis=-1
-            
+                winsize +=1            
 
             kernel = ArrayBackendManager(backend).savgol_coeffs(window_length = winsize,
                                                                 polyorder = 2, axis = saxis,
                                                                 keep_reference = False
                                                                 )
             
-            for lims, chunk in arrslice.arr_split2d(output, chunk_size, axis=saxis,waitbar=True):
-                idxs = arrslice.cross_slice2d(output.ndim, lims[0], lims[1],axis= saxis)
+            for lims, chunk in arrslice.arr_split2d(output, chunk_size, axis=axis,waitbar=True):
+                idxs = arrslice.cross_slice2d(output.ndim, lims[0], lims[1],axis= axis)
 
                 with ArrayBackendContext(backend) as yp:
                     output_chk = yp.to_backend(chunk)
-                    smoothed_chk  = yp.conv1d(output_chk, kernel,axis=saxis, mode='mirror')
+                    smoothed_chk  = yp.conv1d(output_chk, kernel,axis=axis, mode='mirror')
                     output[idxs] = yp.to_numpy(smoothed_chk)
             ArrayBackendManager(backend).free_mem(kernel)
-          
-            # if smooth_method == 'pyfor':
-            #     output = _savgol_pyfor(output,winsize,)
-            # elif smooth_method == 'direct':
-          
-            # output = savgol_filter(output,
-            #                     window_length=winsize,
-            #                     polyorder=2,
-            #                     axis=-1,
-            #                     mode='interp')
 
 
         return output
