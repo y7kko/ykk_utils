@@ -65,23 +65,17 @@ class EnergyDecayCalculator:
                                             fs=self.fs,
                                             axis=(-1 if axis == None else axis)
                                             )
-            # Truncar a matriz
-            print(t_cross.shape)
-            print(C_comp.shape)
             max_t_idx = abs(t-t_cross.max()).argmin()
-            print(f"Truncando no indice {max_t_idx}: {t[max_t_idx]}")
             t = t[:max_t_idx]
             out_trunc_slice = [slice(None)]*output.ndim
             out_trunc_slice[axis] = slice(0,max_t_idx)
             output = output[tuple(out_trunc_slice)]
 
-            print('EDC')
-            #fdc por enquanto vai assim msm
-            # for idx in range(3):
             for idx in range(output.shape[0]):
                 tmask = np.where(t<t_cross[idx])[0]
-
-                output[idx,tmask] = self._rcumsum(output[idx,tmask]**2, normalize = False)
+                output[idx,tmask] = self._rcumsum(output[idx,tmask]**2, 
+                                                  normalize = False
+                                                  )
                 output[idx,t >= t_cross[idx]] = 0
             
             output += C_comp
@@ -92,8 +86,8 @@ class EnergyDecayCalculator:
             if winsize%2 ==0:
                 winsize +=1            
 
-            kernel = ArrayBackendManager(backend).savgol_coeffs(window_length = winsize,
-                                                                polyorder = 2, axis = saxis,
+            savgol_kernel = ArrayBackendManager(backend).savgol_coeffs(window_length = winsize,
+                                                                polyorder = 2, axis = axis,
                                                                 keep_reference = False
                                                                 )
             
@@ -102,9 +96,13 @@ class EnergyDecayCalculator:
 
                 with ArrayBackendContext(backend) as yp:
                     output_chk = yp.to_backend(chunk)
-                    smoothed_chk  = yp.conv1d(output_chk, kernel,axis=axis, mode='mirror')
+
+                    smoothed_chk  = yp.conv1d(output_chk, 
+                                              savgol_kernel,
+                                              axis=axis, 
+                                              mode='mirror')
                     output[idxs] = yp.to_numpy(smoothed_chk)
-            ArrayBackendManager(backend).free_mem(kernel)
+            ArrayBackendManager(backend).free_mem(savgol_kernel)
 
 
         return output

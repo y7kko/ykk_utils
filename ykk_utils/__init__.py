@@ -23,8 +23,7 @@ from .signal_analysis import error_funcs
 from .WavenumberAnalysis import WavenumberAnalysis
 from .ReconstructionErrorAnalyser import ReconstructionAnalyser
 from . import ykplot
-
-
+from . import applications
 __all__ = [
            'EDCinstancer', 
            'WavenumberAnalysis', 
@@ -52,7 +51,8 @@ __all__ = [
             'dsputils',
             'dsp_funcs'
             'arraybackends',
-            'tools'
+            'tools',
+            'applications'
            ]
 
 __version__ = '0.0.3'

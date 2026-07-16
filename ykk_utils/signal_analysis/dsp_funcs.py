@@ -139,13 +139,12 @@ def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_s
         input_is_unidimensional = True
     
 
+    full_freq = generate_frequency_vector(fs=fs,input_freq=freq,half_spectrum=True)
+
     if input_is_unidimensional:
-        spk_full = complete_missing_frequencies(input_freq = freq,
-                                                input_spk = input_spk,
-                                                fs = fs
-                                                )
+        spk_full = complete_missing_frequencies(input_freq=freq, input_spk=input_spk, fs=fs)
+
     else:
-        full_freq = generate_frequency_vector(fs=fs,input_freq=freq,half_spectrum=True)
         spk_full = np.zeros([input_spk.shape[0], len(full_freq)],dtype=complex)
         print('::: Spk Pad')
         for ir_idx in range(input_spk.shape[0]):
@@ -154,8 +153,9 @@ def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_s
                                                 input_spk = current_spk,
                                                 fs = fs
                                                 )
-    out_shape = list(spk_full.shape)
-    out_shape[axis] = 2*(out_shape[axis]-1) 
+
+    out_shape = list(input_spk.shape)
+    out_shape[axis] = 2*(len(full_freq)-1) 
     out_t = np.zeros(out_shape)
 
     for lims, chunk in arrslice.arr_split2d(spk_full, chunk_size, axis=axis,waitbar=True):

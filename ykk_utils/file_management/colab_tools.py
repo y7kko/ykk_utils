@@ -97,7 +97,5 @@ class colabrw():
                     elif isinstance(item, h5py.Dataset):
                         data[key] = item[:]
                 return data
-        
             output_data = extract_data(file)
-
         return output_data
