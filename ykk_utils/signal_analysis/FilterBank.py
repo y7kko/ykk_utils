@@ -72,7 +72,7 @@ class FilterBank:
             tamanho [(2/2)*N,6]=[N,6].
 
         """
-        n_bands =len(self.f_center)
+        n_bands = len(self.f_center)
         sos_mtx = np.zeros([n_bands,self.filter_order,6])
 
         for band_idx in range(n_bands):
@@ -95,7 +95,7 @@ class FilterBank:
             b (int): fração de oitava
 
         Returns:
-            callable: função para calculo das freqyêbcuas centraisa
+            callable: função para calculo das frequências centrais
         """
         if b % 2:
             fm_exp =lambda x: self.fref * self.G**(x/b)

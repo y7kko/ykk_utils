@@ -132,3 +132,4 @@ dmypy.json
 # Merda do Drive
 .tmp.driveupload
 .tmp.drivedownload
+desktop.ini
