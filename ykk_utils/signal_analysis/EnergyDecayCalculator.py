@@ -20,6 +20,8 @@ class EnergyDecayCalculator:
     def __init__(self,ht=None,time=None):
         self.ht = ht
         self.time = time
+        self.noise_method = None
+        self.compensate_noise = False
         pass
 
     def filterConfig(self,fs,**kwargs):
@@ -47,64 +49,48 @@ class EnergyDecayCalculator:
         self.filter_obj._generate_sos_matrix()
         return self
 
+    def noisedetectionConfig(self,method=None,compensatenoise=False):
+        if isinstance(method,str):
+            method = method.lower()
+
+        self.noise_method=method
+        self.compensate_noise = compensatenoise
+
 
     def integrate(self, input = None, band=None, axis=-1, 
-                  smoothing_time=None, normalize=False,
-                  backend='numpy',chunk_size=None,noise_detection_method:str='lundeby'):
+                  normalize=False,time_trunc=False ):
         if input is None:
             input = self.ht
         
         print('Filtering')
         output = self._filterSignal(input, band, axis = axis, normalize = normalize)
-        if noise_detection_method is None:
+        if self.noise_method is None:
             output = self._rcumsum(output**2, axis = axis, normalize = False)
-        elif noise_detection_method.lower() =='lundeby':
+        elif self.noise_method =='lundeby':
             print('Lundeby')
             t = dsp.tvec(output.shape[axis],self.fs)
             t_cross, C_comp = lundeby_unvec(ht=output,
                                             fs=self.fs,
-                                            axis=(-1 if axis == None else axis)
+                                            axis=(-1 if axis == None else axis),
+                                            on_nonconvergence='mean'
                                             )
-            max_t_idx = abs(t-t_cross.max()).argmin()
-            t = t[:max_t_idx]
-            out_trunc_slice = [slice(None)]*output.ndim
-            out_trunc_slice[axis] = slice(0,max_t_idx)
-            output = output[tuple(out_trunc_slice)]
+            if time_trunc:
+                #Truncate to the furthest noise crosspoint
+                outslice = [slice(None)]*output.ndim
+                outslice[axis] = slice(
+                    int(np.max(t_cross)*self.fs)
+                    )
+                output = output[tuple(outslice)]
+                t = t[outslice[axis]]
 
             for idx in range(output.shape[0]):
-                tmask = np.where(t<t_cross[idx])[0]
+                tmask = np.where(t < t_cross[idx])[0]
                 output[idx,tmask] = self._rcumsum(output[idx,tmask]**2, 
                                                   normalize = False
                                                   )
-                output[idx,t >= t_cross[idx]] = 0
-            
-            output += C_comp
-
-        if smoothing_time is not None:
-            print('Smoothing')
-            winsize = int(self.fs*smoothing_time)
-            if winsize%2 ==0:
-                winsize +=1            
-
-            savgol_kernel = ArrayBackendManager(backend).savgol_coeffs(window_length = winsize,
-                                                                polyorder = 2, axis = axis,
-                                                                keep_reference = False
-                                                                )
-            
-            for lims, chunk in arrslice.arr_split2d(output, chunk_size, axis=axis,waitbar=True):
-                idxs = arrslice.cross_slice2d(output.ndim, lims[0], lims[1],axis= axis)
-
-                with ArrayBackendContext(backend) as yp:
-                    output_chk = yp.to_backend(chunk)
-
-                    smoothed_chk  = yp.conv1d(output_chk, 
-                                              savgol_kernel,
-                                              axis=axis, 
-                                              mode='mirror')
-                    output[idxs] = yp.to_numpy(smoothed_chk)
-            ArrayBackendManager(backend).free_mem(savgol_kernel)
-
-
+                output[idx, (t >= t_cross[idx]) ] = np.finfo(float).eps                
+                if self.compensate_noise:
+                    output += C_comp[idx]
         return output
 
 
@@ -123,22 +109,6 @@ class EnergyDecayCalculator:
     
     def _rcumsum(self,input,**kwargs):
         return TR.rcumsum(input,**kwargs)
-    
+
+
 EnergyDecayCalculator.filterConfig.__doc__ = FilterBank.__init__.__doc__
-
-
-def _savgol_pyfor(input,winlen,axis=-1,**kwargs):
-    n_iter = input.shape[0]
-    bar = tqdm(total = n_iter, 
-            desc = 'Appyling Savgol...')
-
-    for iter in range(n_iter):
-        # dynslice = [slice(None)]*input.ndim
-        # dynslice[axis] = iter
-        input[iter,:] = savgol_filter(input[iter,:],
-                                   window_length=winlen,
-                                   polyorder=2,
-                                #    axis=saxis,
-                                   mode='mirror')
-        bar.update(1)
-    return input # A operação é performada no mesmo lugar
