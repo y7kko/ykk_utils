@@ -1,5 +1,6 @@
 """Códigos para operações gerais de processamento de sinais
 """
+import warnings
 import numpy as np
 import scipy
 from scipy import signal
@@ -9,7 +10,7 @@ from ykk_utils.arraybackends import ArrayBackendManager,ArrayBackendContext
 from ykk_utils.arraybackends import array_slicetools as arrslice
 
 def complete_missing_frequencies(input_freq:np.ndarray,
-                                  input_spk:np.ndarray, fs,nonzero=True):
+                                  input_spk:np.ndarray,fs,axis=-1,nonzero=True):
     """Dado um espectro truncado, as extremidades do espectro
     com zero 
 
@@ -23,30 +24,29 @@ def complete_missing_frequencies(input_freq:np.ndarray,
         np.ndarray: input_spk com padding [0:fs/2]
     """
     # infering df
-    df = input_freq[1]-input_freq[0]
-    
-    
+    df = input_freq[1]-input_freq[0]    
     nfft = int(fs/df) # tamanho total do vetor que eu quero
-
     # metade do vetor(até nyquist)
     if (nfft % 2) == 0:
         nfft_half = int(nfft/2)
     else:
         nfft_half = int((nfft+1)/2)
-        
 
-    out_spk = np.zeros(nfft_half, dtype = input_spk.dtype)
+    out_spk_shape = list(input_spk.shape)
+    out_spk_shape[axis] = nfft_half
+    out_spk = np.zeros(out_spk_shape, dtype = input_spk.dtype)
 
     # Indíce em que começa e termina o input no novo vetor
     input_init_idx = int(round(input_freq[0]/df)) #rounding prevents numerical instabilities
     input_last_idx = int(round(input_freq[-1]/df))
 
     # Dumping old spectrum into the new zero padded spectrum
-    out_spk[input_init_idx:input_last_idx+1] = input_spk
+    pad_slice = [slice(None)]*input_spk.ndim
+    pad_slice[axis] = slice(input_init_idx,input_last_idx+1)
+    out_spk[tuple(pad_slice)] = input_spk
 
     #Impede zero absoluto (útil para quando dB)
-    out_spk[np.where(out_spk==0)[0]] = np.finfo(out_spk.dtype).tiny
-
+    out_spk[out_spk==0] = np.finfo(out_spk.dtype).tiny
 
     return out_spk
 
@@ -131,44 +131,53 @@ def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_s
         axis (int): A dimensão em que o código deve operar
             Obs: No momento o axis está hardcoded e assume que a entrada 
             possui shape (dir, freq) ou (freq,)
+        backend (str): Nome do backend utilizado para calculo dos arrays.
+            Para mais informações, ver: `ykk_utils.arraybackends.ArrayBackendManager`
+        chunk_size (float,str): Número de sinais calculados por vez, passado para
+            `arrslice.arr_split2d`
     Returns:
         _type_: O sinal no tempo
     """
     input_is_unidimensional = False
     if input_spk.ndim == 1:
         input_is_unidimensional = True
+        input_spk = input_spk[np.newaxis,:]
+        if backend != 'numpy':
+            warnings.warn('Processar sinais unidimensionais com backends diferentes de "numpy" apresentam redução na performance, alterando para backend="numpy"')
+            backend='numpy'
     
 
     full_freq = generate_frequency_vector(fs=fs,input_freq=freq,half_spectrum=True)
 
-    if input_is_unidimensional:
-        spk_full = complete_missing_frequencies(input_freq=freq, input_spk=input_spk, fs=fs)
-
-    else:
-        spk_full = np.zeros([input_spk.shape[0], len(full_freq)],dtype=complex)
-        print('::: Spk Pad')
-        for ir_idx in range(input_spk.shape[0]):
-            current_spk = input_spk[ir_idx, :]
-            spk_full[ir_idx,:] = complete_missing_frequencies(input_freq = freq,
-                                                input_spk = current_spk,
-                                                fs = fs
-                                                )
-
+    # out_t geralmente vai ser (dirs, N=2*K)
     out_shape = list(input_spk.shape)
     out_shape[axis] = 2*(len(full_freq)-1) 
     out_t = np.zeros(out_shape)
 
-    for lims, chunk in arrslice.arr_split2d(spk_full, chunk_size, axis=axis,waitbar=True):
+    for lims, chunk in arrslice.arr_split2d(input_spk, chunk_size, 
+                                            axis=axis, waitbar=True,
+                                            expected_signal_len=out_t.shape[axis]):
         idxs = arrslice.cross_slice2d(out_t.ndim, lims[0],lims[1],axis=axis)
 
+        if input_is_unidimensional:
+            spk_padd = complete_missing_frequencies(input_freq=freq, input_spk=chunk, fs=fs)
+        else:
+            spk_padd = complete_missing_frequencies(input_freq = freq,
+                                                input_spk = chunk,
+                                                fs = fs, axis=axis
+                                                )
         with ArrayBackendContext(backend) as yp:
-            spk_part = yp.to_backend(chunk)     
-            chk_ifft = yp.irfft(spk_part, axis=axis)
+            spk_bcknd = yp.to_backend(spk_padd)
+            # print(spk_bcknd.shape)
+            chk_ifft = yp.irfft(spk_bcknd, axis=axis)
             out_t[idxs] = yp.to_numpy(chk_ifft) # casts backend type into ndarray
     
     if normalize:
-        out_t = ArrayBackendManager('numpy').norm_max(out_t,axis=axis) 
-    
+        yp = ArrayBackendManager('numpy').get_backend()
+        out_t = yp.norm_max(out_t,axis=axis) 
+
+    if input_is_unidimensional:
+        out_t = out_t.squeeze()   
     return out_t
 
 
@@ -220,6 +229,9 @@ def frequency_roll(input_f,fs,freq,t_shift):
 def chunk_split(input,chk_size,discard_padded=False):
     """Separa sinal unidimensional em blocos de `chk_size` amostras.
 
+    Obsoleto: 
+    Checar ArrayBackend
+
     Args:
         input (ndarray): Sinal unidimensional
         chk_size (int): número de blocos por amostra
@@ -231,22 +243,12 @@ def chunk_split(input,chk_size,discard_padded=False):
     Returns:
         ndarray: Sinal separado em blocos, a saída possuí shape (chk_size,n_chunks)
     """
-    in_size = len(input)
-    
-    n_chunks = int(np.ceil(in_size/chk_size))
-
-    n_pad = int(n_chunks*chk_size-in_size)
-    input_padded = np.pad(array = input,
-                          pad_width = (0,n_pad),
-                          constant_values = 0
-                          )
-    
-    input_padded = input_padded.reshape(n_chunks,chk_size)
-    
-    if discard_padded and n_pad:
-        return input_padded[:-1,:]
-    else:
-        return input_padded
+    yp = ArrayBackendManager('numpy').get_backend()
+    input_padded= yp.chunk_split2d(input,
+                                   chk_size=chk_size,
+                                    axis=-1,
+                                    discard_padded=discard_padded)
+    return input_padded
 
 
 #Aliases
