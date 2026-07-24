@@ -25,3 +25,25 @@ def isotropy(Amn,N=None):
             Amn_sum[n] += np.abs(Amn[counter])
             counter+=1
     return (Amn_sum[0])/np.sum(Amn_sum)
+
+def isotropy_vectorized(Amn,axis=-1):
+    """Dado um vetor Amn, calcula a isotropia do négocio
+
+    Baseado no artigo da Nolan lá
+    Args:
+        Amn (_type_): _description_
+        N (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        float: Coeficiente de isotropia do espectro de esféricos harmônicos
+    """
+
+    nm_axis = int(not axis)
+    i = np.zeros(Amn.shape[axis])
+    num_slice = [slice(None)]*Amn.ndim
+    num_slice[nm_axis] = 0 
+
+    num = abs(Amn[tuple(num_slice)])
+    den = abs(Amn).sum(axis = nm_axis)
+    i = num/den
+    return i
