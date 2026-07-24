@@ -34,7 +34,7 @@ class SHMatrixProcessor:
         pass
     
 
-    def generate_kernel(self,Nmax):
+    def generate_kernel(self,Nmax,logging=True):
         """Gera o kernel de decomposição
 
         Args:
@@ -50,7 +50,13 @@ class SHMatrixProcessor:
                                                 N=Nmax,
                                                 dtype=complex
                                                 )
+        self.condition = np.linalg.cond(self.Ydecomp)
         self.nmmap = sh_ft.get_nm_map(N = Nmax)
+        if logging:
+            print(f':: Spherical harmonics decomposition Kernel')
+            print(f'condition number = {self.condition:.3f}')
+            print(f'kernel shape = {self.Ydecomp.shape}')
+
         return self
         
 
@@ -77,7 +83,10 @@ class SHMatrixProcessor:
                    .to_backend(self.Ydecomp, keep_reference=False)
                    )
 
-        for lims,chk in arr_split2d(self.pk_mtx,chunksize,axis=0):
+        for lims,chk in arr_split2d(self.pk_mtx,
+                                    chunksize,axis=0,
+                                    expected_signal_len=len(_kernel.flatten()) #not true, mas mais realista
+                                    ):
             # print(f'{lims} - {chk.shape}')
             solslice = cross_slice2d(solution.ndim,start=lims[0],stop=lims[1],axis=0)
             with ArrayBackendContext(backend) as yp:
