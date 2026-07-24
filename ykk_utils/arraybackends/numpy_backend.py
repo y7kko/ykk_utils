@@ -2,7 +2,7 @@ from .array_backend_core import array_backend
 from .array_backend_base import ArrayBackendBase
 import numpy as np
 from functools import wraps
-from scipy.signal import savgol_coeffs
+from scipy.signal import savgol_coeffs,fftconvolve
 import scipy.ndimage as ndimage
 import scipy
 @array_backend('numpy')
@@ -49,6 +49,12 @@ class numpy_backend(ArrayBackendBase):
     def conv1d(x,weights,axis=-1,mode='mirror',cval=0.0,**kwargs):
         return ndimage.convolve1d(x,weights,axis=axis,mode=mode,cval=cval)
 
+    def fftconv(*args,**kwargs):
+        if 'axis' in kwargs:
+            kwargs['axes'] = kwargs.pop('axis')
+        return fftconvolve(*args,**kwargs)
+
+
     def chunk_split2d(input,chk_size,axis=-1,discard_padded=False):
         in_len = input.shape[axis]
         n_chunks = int(np.ceil(in_len/chk_size))
@@ -76,32 +82,10 @@ class numpy_backend(ArrayBackendBase):
 
         return input_chk
 
-    @classmethod
-    def __getattr__(cls, key):
-        """PS:CHATGPTADO"""
-        # Evita recursão infinita
-        if key.startswith('__') and key.endswith('__'):
-            raise AttributeError(f"'{cls.__name__}' has no attribute '{key}'")
-        
-        attr = getattr(np, key)
-        
-        # Opcional: Wrapper para preservar docstring
-        if callable(attr):
-            @wraps(attr)
-            def wrapper(*args, **kwargs):
-                return attr(*args, **kwargs)
-            return wrapper
-        
-        return attr
-    
+    def get_free_memory():
+        import psutil
+        mem = psutil.virtual_memory()
+        return mem.available
 
-    @classmethod
-    def __dir__(cls):
-        """Melhora a introspecção e autocomplete
-        
-        PS: CHATGPTADO
-        """
-        # Combina atributos da própria classe com os do numpy
-        own_attrs = set(dir(type(cls))) | set(cls.__dict__.keys())
-        np_attrs = set(dir(np))
-        return sorted(own_attrs | np_attrs)
+    def free_all():
+        pass

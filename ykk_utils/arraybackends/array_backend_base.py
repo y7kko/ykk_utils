@@ -142,3 +142,11 @@ class ArrayBackendBase(ABC):
         Returns:
             ndarray: Sinal separado em blocos, a saída possuí shape (chk_size,n_chunks)
         """
+
+    @abstractmethod
+    def free_all():
+        """Tenta desalocar tudo o que pode
+        """
+
+    def get_free_memory():
+        raise NotImplementedError()

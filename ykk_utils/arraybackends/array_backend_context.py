@@ -21,5 +21,6 @@ class ArrayBackendContext():
         return self.backend
 
     def __exit__(self, exc_type, exc, tb):
+        self.backend.free_all()
         self.backend.reflist_deinit()
         return False

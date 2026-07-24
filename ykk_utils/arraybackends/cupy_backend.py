@@ -1,12 +1,14 @@
-
 import warnings
 
 from .array_backend_core import array_backend,keep_reference
 from .array_backend_base import ArrayBackendBase
 
+from scipy.signal import savgol_coeffs
+
+
 import cupy as cp
 import cupyx.scipy as scp
-from scipy.signal import savgol_coeffs
+from cupyx.scipy.signal import fftconvolve
 from cupyx.scipy import ndimage
 from cupyx import linalg
 import gc
@@ -95,10 +97,21 @@ class cupy_backend(ArrayBackendBase):
     def conv1d(cls,x,weights,axis=-1,mode='mirror',cval=0.0,**kwargs):
         return ndimage.convolve1d(x,weights,axis=axis,mode=mode,cval=cval)
 
+    @keep_reference
+    def fftconv(cls,*args,**kwargs):
+        if 'axis' in kwargs:
+            kwargs['axes'] = kwargs.pop('axis')
+        return fftconvolve(*args,**kwargs)
+
     @classmethod
     def free_mem(cls,arr:cp.ndarray):
         cls.reflist_remove(arr)
-        del(arr)
+        arr.data.mem.free()
+        # Acredito que estou usando uma versão antiga do cupy que
+        # tem algum tipo de memory leakage que não sei resolver,
+        # tentando ser o mais agressivo o possível...
+        del arr 
+        cp.get_default_memory_pool().free_all_blocks()  
 
     @classmethod
     def free_all(cls,):
@@ -106,3 +119,9 @@ class cupy_backend(ArrayBackendBase):
         gc.collect()
         # warnings.warn('Se pah isso vai fuder tudo, não sei pq')
         cp.get_default_memory_pool().free_all_blocks()
+        cp.fft.config.get_plan_cache().clear()
+
+    def get_free_memory():
+        # pool = cp.get_default_memory_pool()
+        return cp.cuda.Device().mem_info[0]
+        # return pool.total_bytes()

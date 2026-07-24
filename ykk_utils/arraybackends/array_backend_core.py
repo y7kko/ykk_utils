@@ -93,7 +93,7 @@ class ArrayBackendManager():
             output += f'  - {key}\n'
         return output
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr,**kwargs):
         if hasattr(_backend_collection[self.backend_key], attr):
             key = self.backend_key
         elif hasattr(_backend_collection[self.fallback_key], attr):
@@ -106,11 +106,8 @@ class ArrayBackendManager():
         method = getattr(backend_object, attr)
         
         #tentando manter metadados do método
-        @wraps(method)
-        def wrapper(*args, **kwargs):
-            return method(*args, **kwargs)
         
-        return wrapper
+        return method(**kwargs)
     
     def __repr__(self):
         return self.__str__()
