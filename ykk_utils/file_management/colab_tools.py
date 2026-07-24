@@ -95,7 +95,10 @@ class colabrw():
                     if isinstance(item, h5py.Group):
                         data[key] = extract_data(item)
                     elif isinstance(item, h5py.Dataset):
-                        data[key] = item[:]
+                        if item.shape == ():  # or item.ndim == 0
+                            data[key] = item[()]  # Use () to access scalar value
+                        else:
+                            data[key] = item[:]
                 return data
             output_data = extract_data(file)
         return output_data
