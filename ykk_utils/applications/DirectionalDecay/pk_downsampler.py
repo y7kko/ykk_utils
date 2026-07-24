@@ -15,10 +15,8 @@ def pk_downsampler(dir,pk,nverts=642,Nmax=30,
         chunksize (_type_, optional): _description_. Defaults to None.
 
     Returns:
-        _type_: _description_
+        dir, pk: _description_
     """
-    if chunksize is None:
-        chunksize = int(pk.shape[1]/10)
     shp = (
         SHMatrixProcessor(dir=dir,pk_mtx=pk)
         .generate_kernel(Nmax)
