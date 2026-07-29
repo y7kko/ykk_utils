@@ -164,6 +164,7 @@ class FilterBank:
         return x_min, x_max
 
     def filter(self, input:np.ndarray, band = None, axis=None):
+    def filter(self, input:np.ndarray, band = None, axis=-1):
         """Filtra um sinal(ou múltiplos sinais) de entrada. Caso
         input tenha ndims > 1, será necessário especificar um axis
 
@@ -175,8 +176,8 @@ class FilterBank:
                     da frequência especificada
                 - Caso uma lista: Retorna o sinal filtrado nas respectivas 
                     bandas mais próximas especificadas na lista. Defaults to None.
-            axis (int, optional): O eixo temporal(Caso axis = None, axis é overwritten para -1). 
-                Defaults to None.
+            axis (int, optional): O eixo temporal(Caso axis = -1, axis é overwritten para -1). 
+                Defaults to -1.
 
 
         Returns:
@@ -194,10 +195,8 @@ class FilterBank:
                 list( abs(self.f_nominal - f).argmin() for f in band )
                 ).sort()
             sos_mtx = self.sos_mtx[idx,:,:]
-        #Axis = None é undefined behaviour em sosfilt
-        if axis is None:
-            axis = -1
 
+        axis = -1
         # list unwrap e depois wrap dnv
         output = np.zeros( [sos_mtx.shape[0], *list(input.shape)] )
         for b_idx in range(output.shape[0]):

@@ -5,9 +5,7 @@ import numpy as np
 from typing import overload
 
 
-def rcumsum(ir:np.ndarray,axis=None,normalize=False):
-    if axis is None:
-        axis = -1
+def rcumsum(ir:np.ndarray,axis=-1,normalize=False):
     output = np.cumsum(np.flip(ir,axis=axis), axis=axis)
     output = np.flip(output, axis=axis) 
     if normalize:
