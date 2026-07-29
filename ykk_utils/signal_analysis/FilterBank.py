@@ -34,10 +34,22 @@ class FilterBank:
         x_min, x_max = self._x_minmax(freqlims=[minfreq,maxfreq],
                                       b=nthoct,
                                       fr=self.fref)
-        
-        self.x = np.arange(x_min,x_max+1) # 
 
-        self.f_center = self.f_center_calculator(self.x)
+        # checks if filter bank covers [minfreq, maxfreq] range
+        # if not, exponents are updated until it covers
+        covers_freq_range = False
+        while(not covers_freq_range):
+            self.x = np.arange(x_min,x_max+1) # 
+            self.f_center = self.f_center_calculator(self.x)
+            if self.f_center[0]*self.G**(-1/(2*self.nthoct)) >= minfreq:
+                x_min -= 1
+                continue
+            elif self.f_center[-1]*self.G**(+1/(2*self.nthoct)) <= maxfreq:
+                x_max += 1
+                continue
+            covers_freq_range = True
+        
+
 
         self.f_lims = np.array([
             (self.f_center)*self.G**(-1/(2*self.nthoct)),
@@ -98,11 +110,9 @@ class FilterBank:
             callable: função para calculo das frequências centrais
         """
         if b % 2:
-            fm_exp =lambda x: self.fref * self.G**(x/b)
+            return ( lambda x: self.fref * self.G**(x/b) )
         else:
-            fm_exp =lambda x: self.fref * self.G**((2*x+1)/(2*b))
-
-        return fm_exp
+            return ( lambda x: self.fref * self.G**((2*x+1)/(2*b)) )
 
     def _get_nominal_freqs(self,b):
         """Simplesmente revoltante, mas isso implementa o Anexo E da norma...
@@ -163,7 +173,6 @@ class FilterBank:
         
         return x_min, x_max
 
-    def filter(self, input:np.ndarray, band = None, axis=None):
     def filter(self, input:np.ndarray, band = None, axis=-1):
         """Filtra um sinal(ou múltiplos sinais) de entrada. Caso
         input tenha ndims > 1, será necessário especificar um axis
