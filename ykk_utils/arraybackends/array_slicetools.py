@@ -63,7 +63,7 @@ class arr_split2d:
         elif isinstance(self.step,str): #auto
             self.step = _autochunksize(self.step,array,axis,expected_signal_len=expected_signal_len)
         elif self.step<=1:
-            self.step = int(array.shape[axis]*self.step)
+            self.step = int(array.shape[self.slice_axis]*self.step)
 
         print('size per batch = ',self.step)
         if self.step >= self.stop_max:
