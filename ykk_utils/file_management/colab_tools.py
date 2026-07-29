@@ -66,7 +66,7 @@ class colabrw():
         return output_data
     
     @staticmethod
-    def read_hdf5(filename,path,autodict=True):
+    def read_hdf5(filename,path:str=None):
         """Lê um hdf5 vindo do export do colab
 
         Args:
@@ -76,19 +76,14 @@ class colabrw():
         Returns:
             _type_: um dict com os dados
         """
-        file = h5py.File(f"{path}{filename}", 'r')
-
-        if not autodict:
-            output_data = {
-                'pk':   file['pk'][:],
-                'dir':  file['dir'][:],
-                'freq': file['freq'][:],
-                'k0':   file['k0'][:],
-                'lambdavec': file['lambdavec'][:],
-                'fs':   file['fs'][()],
-            }
+        if path is not None:
+            if path.endswith(('/',"\\")):
+                path = path[:-1]
+            full_path = f"{path}/{filename}"
         else:
-            # N vo nem fingir que n copiei do gepeto
+            full_path = f"{filename}"
+
+        with h5py.File(full_path, 'r') as file: 
             def extract_data(obj):
                 data = {}
                 for key, item in obj.items():
