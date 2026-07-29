@@ -5,15 +5,15 @@ try:
     from IPython.display import display,Audio, Markdown
 except:
     pass
-
+import warnings
 import tqdm
-
 
 
 def tqdm_flush():
     """Procura todas as waitbar ainda instânciadas e desliga elas,
     resolve o problema das waitbars do tqdm se encavalando
     """
+    warnings.warn('Prefira tools.waitbar.tqdm_flush, essa funcao foi depreciada')
     for barra in list(tqdm.tqdm._instances): 
         barra.close()
     tqdm.tqdm._instances.clear()
