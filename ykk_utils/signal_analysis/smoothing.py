@@ -14,7 +14,7 @@ from ykk_utils.signal_analysis.noisefloor.lundeby_unvectorized import lundeby_un
 from ykk_utils.arraybackends.array_checker import *
 
 
-def savgol(signal,winsize,axis=-1,backend='numpy',chunk_size=None):
+def savgol(signal,winsize,axis=-1,backend='numpy',chunk_size=None,inplace=True):
     """Applies savitzky-golay filtering to an array by means of
     fast convolution.
 
@@ -42,7 +42,10 @@ def savgol(signal,winsize,axis=-1,backend='numpy',chunk_size=None):
     savgol_kernel = savgol_kernel[tuple(krn_slice)]
 
     # Signal padding
-    output = np.zeros(signal.shape)
+    if inplace:
+        output = signal
+    else:
+        output = np.zeros(signal.shape)
     
     for lims, chunk in arrslice.arr_split2d(signal, chunk_size, axis=axis,waitbar=True):
         idxs = arrslice.cross_slice2d(signal.ndim, lims[0], lims[1],axis= axis)
