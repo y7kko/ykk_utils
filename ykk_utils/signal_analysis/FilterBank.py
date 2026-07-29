@@ -1,3 +1,4 @@
+from typing import Callable
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
@@ -27,7 +28,7 @@ class FilterBank:
         self.fs = fs
         
         # Funções para banda fracionária
-        self.f_center_calculator = self._get_midfreq_expression(nthoct)
+        self.f_center_calculator:Callable = self._get_midfreq_expression(nthoct)
 
         # G^{x/b}
         x_min, x_max = self._x_minmax(freqlims=[minfreq,maxfreq],
@@ -44,12 +45,11 @@ class FilterBank:
             ]).T
         
         if autofix:
-            #Remove as bandas em que não posso projetar um filtro por conta do fs
+            #Remove bands where its cutoff frequency surpasses Nyquist
             idx = np.where(self.f_lims[:,1]< (self.fs/2))[0]
             self.f_center = self.f_center[idx]
             self.f_lims= self.f_lims[idx,:]
             self.x = self.x[idx]
-            # Formula empirica pra dar uma puxada pra frequência centrla
 
         self.f_nominal = self._get_nominal_freqs(nthoct)
         self._generate_sos_matrix()

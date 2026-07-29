@@ -71,7 +71,7 @@ class EnergyDecayCalculator:
             t = dsp.tvec(output.shape[axis],self.fs)
             t_cross, C_comp = lundeby_unvec(ht=output,
                                             fs=self.fs,
-                                            axis=(-1 if axis == None else axis),
+                                            axis=axis,
                                             on_nonconvergence='mean'
                                             )
             if time_trunc:
