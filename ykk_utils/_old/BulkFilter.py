@@ -1,8 +1,14 @@
+"""
+Raramente precisei filtrar uma matriz inteira...
+
+Returns:
+    _type_: _description_
+"""
 import numpy as np
 import scipy
 from scipy import signal
 # from .dsp_operations import *
-from . import dsp_funcs as dsp_module
+from ..signal_analysis import dsp_funcs as dsp_module
 #Checar quando que muda as versões etc...
 if scipy.__version__:
     sosfreqz = signal.sosfreqz

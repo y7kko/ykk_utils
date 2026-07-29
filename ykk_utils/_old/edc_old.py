@@ -4,7 +4,7 @@ from tqdm import tqdm
 from ppro_meas_insitu import InsituMeasurementPostPro
 from matplotlib.collections import LineCollection
 from ._pyttaFracFilt import OctFilter
-from .NominalFractionalBands import OctaveBands,ThirdOctaveBands
+from ..signal_analysis.NominalFractionalBands import OctaveBands,ThirdOctaveBands
 from typing import Any
 import gc
 from ..file_management_utilities.GlobalWorkspace import LocalWorkspace

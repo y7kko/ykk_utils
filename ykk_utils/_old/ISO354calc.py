@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 # from .FractionalBands import OctaveBands,ThirdOctaveBands
-from ..signal_analysis.edc_old import ykkEDC
+from .edc_old import ykkEDC
 # from .ISOcalc.ISO9613 import ISO9613 # Preferencia por AirProperties
 import dataclasses
 from controlsair import AirProperties, AlgControls,cart2sph
