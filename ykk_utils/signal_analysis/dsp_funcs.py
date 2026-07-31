@@ -8,7 +8,7 @@ from tqdm import tqdm
 from ykk_utils.tools.waitbar import tqdm_flush
 from ykk_utils.arraybackends import ArrayBackendManager,ArrayBackendContext
 from ykk_utils.arraybackends import array_slicetools as arrslice
-
+from functools import wraps
 def complete_missing_frequencies(input_freq:np.ndarray,
                                   input_spk:np.ndarray,fs,axis=-1,nonzero=True):
     """Dado um espectro truncado, as extremidades do espectro
@@ -252,8 +252,18 @@ def chunk_split(input,chk_size,discard_padded=False):
 
 
 #Aliases
-troll = time_roll
-ftroll = frequency_roll
+@wraps(time_roll)
+def troll(*args,**kwargs):
+    return time_roll(*args,**kwargs)
 
-tvec = generate_time_vector
-fvec = generate_frequency_vector
+@wraps(frequency_roll)
+def ftroll(*args,**kwargs):
+    return frequency_roll(*args,**kwargs)
+
+@wraps(generate_time_vector)
+def tvec(*args,**kwargs):
+    return generate_time_vector(*args,**kwargs)
+
+@wraps(generate_frequency_vector)
+def fvec(*args,**kwargs):
+    return generate_frequency_vector(*args,**kwargs)
