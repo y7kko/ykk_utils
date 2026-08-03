@@ -178,12 +178,12 @@ def _autochunksize(argument:str,array,axis,expected_signal_len=None):
         signal_size = expected_signal_len
     itemsize = array.itemsize
     bytes_per_signal = int(signal_size*itemsize)
-
+    print(f":: autochunk: '{backend}'")
     print(f'value {value}')
     print(f'Numero de samples por sinal {signal_size}')
-    print(f'MiB livres {free_bytes/2**(20)}')
-    print(f'MiB/sinal {bytes_per_signal/2**(20)}')
-    print(f'MiB para usar {bytes_to_use/2**(20)}')
+    print(f'Memoria livre: {free_bytes/2**(20):.2f} MiB')
+    print(f'Quanto reservar: {bytes_per_signal/2**(20):.2f} MiB/sinal')
+    print(f'Memoria dedicada a operacao: {bytes_to_use/2**(20):.2f} MiB')
     slice_step = int(bytes_to_use/bytes_per_signal)
     slice_step = max(1,slice_step)
     return slice_step
