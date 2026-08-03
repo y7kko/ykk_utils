@@ -7,7 +7,7 @@ def get_latest_commit_message():
     """Obtém a mensagem do último commit"""
     try:
         result = subprocess.run(
-            ['cmd','/c','git', 'log', '-1', '--pretty=%B'],
+            ['cmd','/c','git', 'log', '-1', r'--pretty=%s'],
             capture_output=True,
             text=True,
             check=True
@@ -19,7 +19,7 @@ def get_latest_commit_message():
 
 def parse_conventional_commit(message):
     """Analisa a mensagem segundo Conventional Commits"""
-    # Padrão: type(scope): description
+    # Padrao: type(scope): description
     # Tipos: feat, fix, docs, style, refactor, perf, test, chore, etc.
     pattern = r'^(?P<type>feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(?:\((?P<scope>[^)]+)\))?: (?P<description>.+)$'
     match = re.match(pattern, message, re.IGNORECASE)
@@ -29,7 +29,7 @@ def parse_conventional_commit(message):
     return None, None, None
 
 def get_current_version(init_path):
-    """Lê a versão atual do __init__.py"""
+    """Lê a versao atual do __init__.py"""
     with open(init_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
@@ -39,7 +39,7 @@ def get_current_version(init_path):
     return "0.0.0"
 
 def bump_version(current_version, commit_type):
-    """Incrementa a versão baseado no tipo de commit"""
+    """Incrementa a versao baseado no tipo de commit"""
     # Remove 'v' se existir
     if current_version.startswith('v'):
         current_version = current_version[1:]
@@ -71,11 +71,11 @@ def bump_version(current_version, commit_type):
     return f"{major}.{minor}.{patch}"
 
 def update_version_file(init_path, new_version):
-    """Atualiza a versão no arquivo __init__.py"""
+    """Atualiza a versao no arquivo __init__.py"""
     with open(init_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # Atualiza a versão
+    # Atualiza a versao
     new_content = re.sub(
         r"__version__\s*=\s*['\"][^'\"]+['\"]",
         f'__version__ = "{new_version}"',
@@ -85,30 +85,30 @@ def update_version_file(init_path, new_version):
     with open(init_path, 'w', encoding='utf-8') as f:
         f.write(new_content)
     
-    print(f"Versão atualizada para: {new_version}")
+    print(f"Versao atualizada para: {new_version}")
 
 def main():
     # Encontra o caminho do __init__.py no diretório atual
     init_path = Path.cwd() / "ykk_utils/__init__.py"
     
     if not init_path.exists():
-        print("Arquivo __init__.py não encontrado no diretório atual")
+        print("Arquivo __init__.py nao encontrado no diretorio atual")
         return
     
     # Obtém a mensagem do último commit
     commit_message = get_latest_commit_message()
     if not commit_message:
-        print("Não foi possível obter a mensagem do commit")
+        print("Nao foi possível obter a mensagem do commit")
         return
     
     print(f"Mensagem do commit: {commit_message}")
     
     # Analisa o commit
-    commit_type, scope, description = parse_conventional_commit(commit_message)
+    commit_type, _, _ = parse_conventional_commit(commit_message)
     
     # Verifica se é um commit convencional
     if not commit_type:
-        print("Commit não segue Conventional Commits. Versão não alterada.")
+        print("Commit nao segue Conventional Commits. Versao nao alterada.")
         return
     
     # Verifica se há BREAKING CHANGE no corpo
@@ -117,21 +117,22 @@ def main():
     
     print(f"Tipo de commit: {commit_type}")
     
-    # Lê versão atual
+    # Lê versao atual
     current_version = get_current_version(init_path)
-    print(f"Versão atual: {current_version}")
+    print(f"Versao atual: {current_version}")
     
-    # Calcula nova versão
+    # Calcula nova versao
     new_version = bump_version(current_version, commit_type)
     
-    if new_version == current_version:
-        print("Versão não alterada")
+    if not (new_version == current_version):
+        print(f":: Version Bump")
+        print(f'{current_version} -> {new_version}')
+    else:
         return
     
     # Atualiza o arquivo
     update_version_file(init_path, new_version)
     
-    # Adiciona o arquivo ao commit
     try:
         subprocess.run(['cmd','/c','git', 'add', str(init_path)], check=True)
         subprocess.run(['cmd','/c','git', 'commit', '--amend', '--no-edit', '--no-verify'], check=True)
