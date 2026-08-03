@@ -3,6 +3,11 @@ import subprocess
 import os
 from pathlib import Path
 
+_show_commit_msg = False
+
+def yellow(string):
+    return  "\033[33m" + string + "\033[0m"
+
 def get_latest_commit_message():
     """Obtém a mensagem do último commit"""
     try:
@@ -100,15 +105,15 @@ def main():
     if not commit_message:
         print("Nao foi possível obter a mensagem do commit")
         return
-    
-    print(f"Mensagem do commit: {commit_message}")
+    if _show_commit_msg:
+        print(f"Mensagem do commit: {commit_message}")
     
     # Analisa o commit
     commit_type, _, _ = parse_conventional_commit(commit_message)
     
     # Verifica se é um commit convencional
     if not commit_type:
-        print("Commit nao segue Conventional Commits. Versao nao alterada.")
+        print(yellow("Commit nao segue Conventional Commits. Versao nao alterada."))
         return
     
     # Verifica se há BREAKING CHANGE no corpo
