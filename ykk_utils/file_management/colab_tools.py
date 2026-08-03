@@ -15,7 +15,7 @@ class colabrw():
         _type_: _description_
     """
     @staticmethod
-    def dict2hdf5(filename,path,dataset,metadata:dict={}):
+    def dict2hdf5(filename,dataset,path='',metadata:dict={}):
         filePath=f'{path}{filename}'
         file = h5py.File(filePath,'w')
         for key,val in dataset.items():
@@ -40,7 +40,7 @@ class colabrw():
 
 
     @staticmethod
-    def cloud_read(filename,path):
+    def cloud_read(filename,path=''):
         """Importar .hdf5(.colabinput) e transformar em um conjunto de variáveis compatível
         com o código do colab
 
