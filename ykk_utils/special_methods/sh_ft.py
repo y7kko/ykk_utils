@@ -2,9 +2,14 @@
 Funções para computar a decomposição em harmônicos esféricos
 """
 import numpy as np
-from scipy.special import sph_harm
-# from typing import overload
 
+try:
+    from scipy.special import sph_harm
+except:
+    from scipy.special import sph_harm_y as sph_harm
+
+
+# from typing import overload
 def cart2sph(x, y=None, z=None, positive_azm=False, steady_elv=False):
     """Conversion of cartesian to spherical coordinates.
         Essa função foi tirada do Spaudiopy, preferi apenas reimplementar
@@ -78,7 +83,7 @@ def sph2cart(azi, zen, r=1):
 
 
 
-def generate_Y_kernel(azm:np.ndarray,elv:np.ndarray,N=7,dtype=None):
+def generate_Y_kernel(azm:np.ndarray,elv:np.ndarray,N=7,dtype=complex):
     """Recebe um array de coordenadas esféricas em uma esfera unitária
     e calcula um Kernel de esféricos harmônicos do grau 0 até N.
 
@@ -100,11 +105,46 @@ def generate_Y_kernel(azm:np.ndarray,elv:np.ndarray,N=7,dtype=None):
     counter = 0
     for n in range(0,N+1):
         for m in range(-n,n+1):
-            Ymn = sph_harm(m,n,azm,elv)
+            Ymn = sph_wrapper(order=m, degree=n,
+                              theta=azm, phi=elv,
+                              dtype=dtype)
             Kernel[:,counter] = Ymn
             counter+=1
 
     return Kernel
+
+def sph_wrapper(order,degree,theta,phi,dtype=complex) -> np.ndarray:
+    """Wrapper de sph_harm ou sph_harm_y do scipy. A conversão para base
+    real é baseada em:
+    https://en.wikipedia.org/wiki/Spherical_harmonics#Real_form
+
+    See: `scipy.special.sph_harm_y`
+
+    Args:
+        order (_type_): _description_
+        degree (_type_): _description_
+        theta (_type_): _description_
+        phi (_type_): _description_
+        dtype (_type_, optional): caso seja . Defaults to complex.
+
+    Returns:
+        np.ndarray: A base de esféricos harmônicos Ymn, avaliado nas direções
+        (theta,phi)
+    """
+    if dtype is complex:
+        Y = sph_harm(order,degree,theta,phi)
+    elif dtype is float:
+        if order < 0:
+            Y = sph_harm(abs(order),degree,theta,phi).imag()
+            Y = np.sqrt(2) * (-1)**order
+        elif order == 0:
+            Y = sph_harm(order,degree,theta,phi)
+        elif order > 0:
+            Y = sph_harm(abs(order),degree,theta,phi).real()
+            Y = np.sqrt(2) * (-1)**order
+    else:
+        raise ValueError("`dtype` apenas definido para tipos 'float' ou 'complex'.")
+    return Y
 
 
 def solve_LSQ(Kernel,pk_input,return_all=False):
