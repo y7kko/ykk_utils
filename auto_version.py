@@ -1,0 +1,147 @@
+import re
+import subprocess
+import os
+from pathlib import Path
+
+def get_latest_commit_message():
+    """Obtém a mensagem do último commit"""
+    try:
+        result = subprocess.run(
+            ['cmd','/c','git', 'log', '-1', '--pretty=%B'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        print("Erro ao obter mensagem do commit")
+        return None
+
+def parse_conventional_commit(message):
+    """Analisa a mensagem segundo Conventional Commits"""
+    # Padrão: type(scope): description
+    # Tipos: feat, fix, docs, style, refactor, perf, test, chore, etc.
+    pattern = r'^(?P<type>feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(?:\((?P<scope>[^)]+)\))?: (?P<description>.+)$'
+    match = re.match(pattern, message, re.IGNORECASE)
+    
+    if match:
+        return match.group('type').lower(), match.group('scope'), match.group('description')
+    return None, None, None
+
+def get_current_version(init_path):
+    """Lê a versão atual do __init__.py"""
+    with open(init_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    version_match = re.search(r"__version__\s*=\s*['\"]([^'\"]+)['\"]", content)
+    if version_match:
+        return version_match.group(1)
+    return "0.0.0"
+
+def bump_version(current_version, commit_type):
+    """Incrementa a versão baseado no tipo de commit"""
+    # Remove 'v' se existir
+    if current_version.startswith('v'):
+        current_version = current_version[1:]
+    
+    # Divide em major, minor, patch
+    parts = current_version.split('.')
+    if len(parts) != 3:
+        parts = ['0', '0', '0']
+    
+    major, minor, patch = map(int, parts)
+    
+    # Regras de versionamento baseado no tipo de commit
+    if commit_type == 'feat':
+        # Nova feature: incrementa minor, zera patch
+        minor += 1
+        patch = 0
+    elif commit_type == 'fix':
+        # Bug fix: incrementa patch
+        patch += 1
+    elif commit_type in ['perf', 'refactor', 'style', 'docs']:
+        # Melhorias: incrementa patch (opcional)
+        patch += 1
+    elif commit_type in ['BREAKING CHANGE', 'revert']:
+        # Breaking change: incrementa major, zera minor e patch
+        major += 1
+        minor = 0
+        patch = 0
+    
+    return f"{major}.{minor}.{patch}"
+
+def update_version_file(init_path, new_version):
+    """Atualiza a versão no arquivo __init__.py"""
+    with open(init_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Atualiza a versão
+    new_content = re.sub(
+        r"__version__\s*=\s*['\"][^'\"]+['\"]",
+        f'__version__ = "{new_version}"',
+        content
+    )
+    
+    with open(init_path, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+    
+    print(f"Versão atualizada para: {new_version}")
+
+def main():
+    # Encontra o caminho do __init__.py no diretório atual
+    init_path = Path.cwd() / "ykk_utils/__init__.py"
+    
+    if not init_path.exists():
+        print("Arquivo __init__.py não encontrado no diretório atual")
+        return
+    
+    # Obtém a mensagem do último commit
+    commit_message = get_latest_commit_message()
+    if not commit_message:
+        print("Não foi possível obter a mensagem do commit")
+        return
+    
+    print(f"Mensagem do commit: {commit_message}")
+    
+    # Analisa o commit
+    commit_type, scope, description = parse_conventional_commit(commit_message)
+    
+    # Verifica se é um commit convencional
+    if not commit_type:
+        print("Commit não segue Conventional Commits. Versão não alterada.")
+        return
+    
+    # Verifica se há BREAKING CHANGE no corpo
+    if 'BREAKING CHANGE' in commit_message.upper():
+        commit_type = 'BREAKING CHANGE'
+    
+    print(f"Tipo de commit: {commit_type}")
+    
+    # Lê versão atual
+    current_version = get_current_version(init_path)
+    print(f"Versão atual: {current_version}")
+    
+    # Calcula nova versão
+    new_version = bump_version(current_version, commit_type)
+    
+    if new_version == current_version:
+        print("Versão não alterada")
+        return
+    
+    # Atualiza o arquivo
+    update_version_file(init_path, new_version)
+    
+    # Adiciona o arquivo ao commit
+    try:
+        subprocess.run(['cmd','/c','git', 'add', str(init_path)], check=True)
+        subprocess.run(['cmd','/c','git', 'commit', '--amend', '--no-edit', '--no-verify'], check=True)
+        print("Arquivo __init__.py adicionado ao commit com sucesso!")
+    except subprocess.CalledProcessError as e:
+        print(f"Erro ao adicionar ao commit: {e}")
+        print("Você pode adicionar manualmente com: git add __init__.py && git commit --amend --no-edit")
+
+    os.environ.pop('SKIP_VERSION_BUMP', None)
+
+
+if __name__ == "__main__":
+    main()
