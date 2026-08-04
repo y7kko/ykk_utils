@@ -175,7 +175,11 @@ def _knee_maxchord(x,y,axis=-1):
     # Normalizing x and y
     x = (x - np.min(x,**np_kw)) / (np.max(x,**np_kw) - np.min(x,**np_kw))
     y = (y - np.min(y,**np_kw)) / (np.max(y,**np_kw) - np.min(y,**np_kw))    
-    return abs(x+y).argmin()
+
+    d = abs((y[-1]-y[0])*x -(x[-1]-x[0])*y + x[-1]*y[0] -y[-1]*x[0])
+    d /= np.sqrt((y[-1] - y[0])**2 + (x[-1] - x[0])**2)
+
+    return abs(d).argmax()
 
 def _chunk_divider(ht:np.ndarray,t:np.ndarray,axis:int,chk_size:int,backend:str):
         # modulo das minhas funções
