@@ -9,6 +9,8 @@ from ykk_utils.tools.waitbar import tqdm_flush
 from ykk_utils.arraybackends import ArrayBackendManager,ArrayBackendContext
 from ykk_utils.arraybackends import array_slicetools as arrslice
 from functools import wraps
+
+
 def complete_missing_frequencies(input_freq:np.ndarray,
                                   input_spk:np.ndarray,fs,axis=-1,nonzero=True):
     """Dado um espectro truncado, as extremidades do espectro
@@ -119,7 +121,8 @@ def generate_time_vector(data,fs):
     return time_vector
 
 
-def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_size=None):
+def ifft_trunc(input_spk,freq,fs:int,normalize:bool=False,axis:int=-1,backend:str='numpy',
+               chunk_size=None,freqwin:bool=True,winmult:float=1.5):
     """Realiza a ifft de um espectro truncado.
     À parte não definida pelo sinal de entrada, são atribuidos zeros.
 
@@ -135,8 +138,11 @@ def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_s
             Para mais informações, ver: `ykk_utils.arraybackends.ArrayBackendManager`
         chunk_size (float,str): Número de sinais calculados por vez, passado para
             `arrslice.arr_split2d`
+        freqwin (bool): Caso True, criar janela para prevenir fenômeno de Gibbs. O formato da janela
+            é definido por `winmult`. See `_generate_freqwindow()`.
+        winmult (float): Multiplicador da janela. See `_generate_freqwindow()`.
     Returns:
-        _type_: O sinal no tempo
+        ndarray: A matriz do sinal no tempo
     """
     input_is_unidimensional = False
     if input_spk.ndim == 1:
@@ -148,6 +154,12 @@ def ifft_trunc(input_spk,freq,fs,normalize=False,axis=-1,backend='numpy',chunk_s
     
 
     full_freq = generate_frequency_vector(fs=fs,input_freq=freq,half_spectrum=True)
+
+    if freqwin:
+        win = _generate_freqwindow(freq,mult=winmult)
+        winshape = [slice(None)]*input_spk.ndims
+        winshape[not axis] = np.newaxis
+        input_spk *= win
 
     # out_t geralmente vai ser (dirs, N=2*K)
     out_shape = list(input_spk.shape)
@@ -267,3 +279,43 @@ def tvec(*args,**kwargs):
 @wraps(generate_frequency_vector)
 def fvec(*args,**kwargs):
     return generate_frequency_vector(*args,**kwargs)
+
+def _generate_freqwindow(freq,mult=2):
+    """Dado um vetor de frequências truncado, computar uma
+    janela híbrida para prevenir fenômeno de gibbs. A janela
+    possui formato:
+        ```
+          /-------\
+         /         \
+        /           \
+        .  .      .  .
+        p1 p2     p3  p4
+        ``` 
+        - p1 = min(freq)
+        - p2 = p1*mult
+        - p3 = max(freq)/mult
+        - p4 = max(freq)
+        ```
+
+    Args:
+        freq (ndarray): vetor contendo as frequências em que o espectro está
+            definido
+        mult (int, optional): multiplicador da janela. Defaults to 2.
+    """
+    def find_f_idx(fvec,val):
+        return abs(fvec-val).argmin()
+    w1_init = 0
+    w1_end = find_f_idx(freq,freq[w1_init]*mult)
+
+
+    w2_end = len(freq)-1
+    w2_init = find_f_idx(freq,freq[w2_end]/mult)
+
+    import scipy.signal as signal   
+    w1_s = 2*(w1_end-w1_init)
+    w2_s = 2*(w2_end-w2_init)
+
+    win = np.ones(len(freq))
+    win[0:int(w1_s/2)] = signal.windows.hann(w1_s)[0:int(w1_s/2)]
+    win[w2_init+1:] = signal.windows.hann(w2_s)[int(w2_s/2):]
+    return win
