@@ -28,13 +28,14 @@ class SHMatrixProcessor:
             y = self.dir[:,1],
             z = self.dir[:,2]
             )
-        
-        # self.pk_freq = pk_freq # frequencia incompleta ainda
-        # self.fs = fs
-        pass
+
+        self.kernel_is_complex = False
+        self.input_is_complex = False
+        if pk_mtx.dtype is complex:
+            self.input_is_complex = True
     
 
-    def generate_kernel(self,Nmax,logging=True):
+    def generate_kernel(self,Nmax,dtype=complex,logging=True):
         """Gera o kernel de decomposição
 
         Args:
@@ -48,7 +49,7 @@ class SHMatrixProcessor:
         self.Ydecomp =  sh_ft.generate_Y_kernel(azm=self.azm,
                                                 elv=self.elv,
                                                 N=Nmax,
-                                                dtype=complex
+                                                dtype=dtype
                                                 )
         self.condition = np.linalg.cond(self.Ydecomp)
         self.nmmap = sh_ft.get_nm_map(N = Nmax)
@@ -56,6 +57,9 @@ class SHMatrixProcessor:
             print(f':: Spherical harmonics decomposition Kernel')
             print(f'condition number = {self.condition:.3f}')
             print(f'kernel shape = {self.Ydecomp.shape}')
+
+        if dtype is complex:
+            self.kernel_is_complex = True
 
         return self
         
