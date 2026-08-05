@@ -93,7 +93,9 @@ class EnergyDecayCalculator:
                                                   )
                 output[idx, (t >= t_cross[idx]) ] = np.finfo(float).eps                
                 if self.compensate_noise:
-                    output += C_comp[idx]
+                    output[idx,:] += C_comp[idx]
+                
+
         return output
 
 
