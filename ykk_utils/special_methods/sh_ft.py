@@ -71,6 +71,9 @@ def sph2cart(azi, zen, r=1):
         Source: https://github.com/chris-hld/spaudiopy (v0.2.0)
         DOI: 10.5281/zenodo.15384855
 
+    Returns:
+        x,y,z: Uma tupla de ndarrays
+
 
     """
     azi = np.asarray(azi)
@@ -121,8 +124,8 @@ def sph_wrapper(order,degree,theta,phi,dtype=complex) -> np.ndarray:
     See: `scipy.special.sph_harm_y`
 
     Args:
-        order (_type_): _description_
-        degree (_type_): _description_
+        order (_type_): quasse sempre m
+        degree (_type_): geralmente l ou n
         theta (_type_): _description_
         phi (_type_): _description_
         dtype (_type_, optional): caso seja . Defaults to complex.
@@ -135,13 +138,16 @@ def sph_wrapper(order,degree,theta,phi,dtype=complex) -> np.ndarray:
         Y = sph_harm(order,degree,theta,phi)
     elif dtype is float:
         if order < 0:
-            Y = sph_harm(abs(order),degree,theta,phi).imag()
-            Y = np.sqrt(2) * (-1)**order
+            Y = sph_harm(abs(order),degree,theta,phi)
+            Y = np.imag(Y)
+            Y *= np.sqrt(2) * (-1)**order
         elif order == 0:
             Y = sph_harm(order,degree,theta,phi)
         elif order > 0:
-            Y = sph_harm(abs(order),degree,theta,phi).real()
-            Y = np.sqrt(2) * (-1)**order
+            Y = sph_harm(abs(order),degree,theta,phi)
+            Y = np.real(Y)
+            Y *= np.sqrt(2) * (-1)**order
+        Y = np.real(Y)
     else:
         raise ValueError("`dtype` apenas definido para tipos 'float' ou 'complex'.")
     return Y
