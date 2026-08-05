@@ -62,7 +62,7 @@ def lundeby_unvec(ht,fs,axis=-1,on_nonconvergence='raise'):
         # plt.plot(t_chk,a*t_chk+b)
         dt = t_chk[1]-t_chk[0]
         idx_cross = int((N_level-b)/(a*dt))
-        idx_cross = np.clip(idx_cross,0,len(t_chk))
+        idx_cross = np.clip(idx_cross,0,len(t_chk)-1)
         t_cross = t_chk[idx_cross]
 
         newint = -10/(3*a)
