@@ -157,7 +157,7 @@ def ifft_trunc(input_spk,freq,fs:int,normalize:bool=False,axis:int=-1,backend:st
 
     if freqwin:
         win = _generate_freqwindow(freq,mult=winmult)
-        winshape = [slice(None)]*input_spk.ndims
+        winshape = [slice(None)]*input_spk.ndim
         winshape[not axis] = np.newaxis
         input_spk *= win
 
