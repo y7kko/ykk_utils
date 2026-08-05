@@ -12,6 +12,7 @@ from ykk_utils.arraybackends import array_slicetools as arrslice
 from ykk_utils.tools.waitbar import tqdm_flush
 from ykk_utils.signal_analysis import dsp_funcs as dsp
 from ykk_utils.signal_analysis.noisefloor.lundeby_unvectorized import lundeby_unvec
+import warnings
 """Todo: 
 - Normalizar depois de filtrar...
 
@@ -68,6 +69,8 @@ class EnergyDecayCalculator:
             output = self._rcumsum(output**2, axis = axis, normalize = False)
         elif self.noise_method =='lundeby':
             print('Lundeby')
+            if axis != -1:
+                warnings.warn('Não implementei para esse tipo de axis ainda')
             t = dsp.tvec(output.shape[axis],self.fs)
             t_cross, C_comp = lundeby_unvec(ht=output,
                                             fs=self.fs,
