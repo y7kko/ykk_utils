@@ -16,7 +16,9 @@ class colabrw():
     """
     @staticmethod
     def dict2hdf5(filename,dataset,path='',metadata:dict={}):
-        filePath=f'{path}{filename}'
+        if path.endswith(('\\','/')):
+            path = path[:-1]
+        filePath=f'{path}/{filename}'
         file = h5py.File(filePath,'w')
         for key,val in dataset.items():
             file.create_dataset(name=key,
