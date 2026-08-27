@@ -193,6 +193,60 @@ def ifft_trunc(input_spk,freq,fs:int,normalize:bool=False,axis:int=-1,backend:st
     return out_t
 
 
+def rfft(input_t,axis:int=-1,backend:str='numpy',
+               chunk_size=None):
+    """Realiza a ifft de um espectro truncado.
+    À parte não definida pelo sinal de entrada, são atribuidos zeros.
+
+
+    Args:
+        input_spk (ndarray): Espectro truncado
+        freq (ndarray): Frequências do espectro truncado len(freq)==len(input_spk)
+        fs (int): Taxa de amostragem
+        axis (int): A dimensão em que o código deve operar
+            Obs: No momento o axis está hardcoded e assume que a entrada 
+            possui shape (dir, freq) ou (freq,)
+        backend (str): Nome do backend utilizado para calculo dos arrays.
+            Para mais informações, ver: `ykk_utils.arraybackends.ArrayBackendManager`
+        chunk_size (float,str): Número de sinais calculados por vez, passado para
+            `arrslice.arr_split2d`
+        freqwin (bool): Caso True, criar janela para prevenir fenômeno de Gibbs. O formato da janela
+            é definido por `winmult`. See `_generate_freqwindow()`.
+        winmult (float): Multiplicador da janela. See `_generate_freqwindow()`.
+    Returns:
+        ndarray: A matriz do sinal no tempo
+    """
+    input_is_unidimensional = False
+    if input_t.ndim == 1:
+        input_is_unidimensional = True
+        input_t = input_t[np.newaxis,:]
+        if backend != 'numpy':
+            warnings.warn('Processar sinais unidimensionais com backends diferentes de "numpy" apresentam redução na performance, alterando para backend="numpy"')
+            backend='numpy'
+
+    if input_t.shape[axis]%2 ==0:
+        N_half = (input_t.shape[axis]/2)+1
+    else:
+        N_half = ((input_t.shape[axis]+1)/2)
+    # out_t geralmente vai ser (dirs, N=2*K)
+    out_shape = list(input_t.shape)
+    out_shape[axis] = int(N_half)
+    out_t = np.zeros(out_shape,dtype=complex)
+
+    for lims, chunk in arrslice.arr_split2d(input_t, chunk_size, 
+                                            axis=axis, waitbar=True,
+                                            expected_signal_len=out_t.shape[axis]*2):
+        idxs = arrslice.cross_slice2d(out_t.ndim, lims[0],lims[1],axis=axis)
+
+        with ArrayBackendContext(backend) as yp:
+            ht_bcknd = yp.to_backend(chunk)
+            chk_spk = yp.rfft(ht_bcknd, axis=axis)
+            out_t[idxs] = yp.to_numpy(chk_spk) # casts backend type into ndarray
+
+    if input_is_unidimensional:
+        out_t = out_t.squeeze()   
+    return out_t
+
 def time_roll(input_t,fs,t_shift,axis=None):
     """Faz um shift circular no array
 
