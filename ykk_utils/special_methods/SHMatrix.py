@@ -35,7 +35,7 @@ class SHMatrixProcessor:
             self.input_is_complex = True
     
 
-    def generate_kernel(self,Nmax,dtype=complex,logging=True):
+    def generate_kernel(self,Nmax,dtype=complex,logging=False):
         """Gera o kernel de decomposição
 
         Args:
@@ -77,10 +77,12 @@ class SHMatrixProcessor:
 
         n_degordr = (self.Nmax+1)**2
 
-        solution = np.zeros([n_degordr, n_samples],dtype=complex)
-        tqdm_flush()
-        bar = tqdm(total = n_samples, 
-                    desc = 'Decomposing...')
+        if (self.Ydecomp.dtype is complex) or (self.pk_mtx.dtype is complex):
+            solution = np.zeros([n_degordr, n_samples],dtype=self.Ydecomp.dtype)
+        else:
+            solution = np.zeros([n_degordr, n_samples],dtype=float)
+            
+
 
         _kernel = (ArrayBackendManager(backend)
                    .get_backend() #necessáro apenas pra manter docstring
@@ -98,7 +100,7 @@ class SHMatrixProcessor:
 
                 _sol, _, _, _ = yp.lstsq(_kernel,_chk,rcond=None)
                 solution[solslice] = yp.to_numpy(_sol)
-            bar.update(chunksize)
+
 
 
         self.SH_decomp = solution
