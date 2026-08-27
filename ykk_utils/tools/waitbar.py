@@ -7,5 +7,6 @@ def tqdm_flush():
     resolve o problema das waitbars do tqdm se encavalando
     """
     for barra in list(tqdm.tqdm._instances): 
+        barra.disable = True
         barra.close()
     tqdm.tqdm._instances.clear()
