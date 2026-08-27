@@ -24,6 +24,7 @@ def lundeby_unvec(ht,fs,axis=-1,on_nonconvergence='raise'):
     Returns:
         _type_: _description_
     """
+    warnings.warn('Não utilizar lundeby_unvectorized.py, ela possui algum bug que não lembro onde é... ')
     if ht.ndim ==1:
         ht = ht.reshape(1,-1)
         

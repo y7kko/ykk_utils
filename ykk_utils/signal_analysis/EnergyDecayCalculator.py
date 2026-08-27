@@ -11,19 +11,23 @@ from ykk_utils.arraybackends import ArrayBackendManager, ArrayBackendContext
 from ykk_utils.arraybackends import array_slicetools as arrslice
 from ykk_utils.tools.waitbar import tqdm_flush
 from ykk_utils.signal_analysis import dsp_funcs as dsp
-from ykk_utils.signal_analysis.noisefloor.lundeby_unvectorized import lundeby_unvec
+# from ykk_utils.signal_analysis.noisefloor.lundeby_unvectorized import lundeby_unvec
+from ykk_utils.signal_analysis.noisefloor.lundeby_unvec import lundeby_unvec
+
 import warnings
 """Todo: 
 - Normalizar depois de filtrar...
 
 """
 class EnergyDecayCalculator:
-    def __init__(self,ht=None,time=None):
+    def __init__(self,ht=None,time=None,fs=None):
         self.ht = ht
         self.time = time
         self.noise_method = None
         self.compensate_noise = False
-        pass
+        self.fs = fs
+        if fs is not None:
+            self.filterConfig(fs=self.fs,nthoct=3)
 
     def filterConfig(self,fs,**kwargs):
         """
@@ -59,7 +63,7 @@ class EnergyDecayCalculator:
 
 
     def integrate(self, input = None, band=None, axis=-1, 
-                  normalize=False,time_trunc=False ):
+                  normalize=False,time_trunc=False,headroom=0 ):
         if input is None:
             input = self.ht
         
@@ -69,39 +73,53 @@ class EnergyDecayCalculator:
             output = self._rcumsum(output**2, axis = axis, normalize = False)
         elif self.noise_method =='lundeby':
             print('Lundeby')
-            if axis != -1:
-                warnings.warn('Não implementei para esse tipo de axis ainda')
             t = dsp.tvec(output.shape[axis],self.fs)
-            t_cross, C_comp = lundeby_unvec(ht=output,
-                                            fs=self.fs,
-                                            axis=axis,
-                                            on_nonconvergence='mean'
-                                            )
+            self.t_cross = self._get_lundeby_tc(output,
+                                                headroom=headroom,
+                                                axis=axis)
+            
+            # t_cross, C_comp = self.ndetector.find_crosspoint(ht=output,axis=axis)
             if time_trunc:
-                #Truncate to the furthest noise crosspoint
-                outslice = [slice(None)]*output.ndim
-                outslice[axis] = slice(
-                    int(np.max(t_cross)*self.fs)
-                    )
-                output = output[tuple(outslice)]
-                t = t[outslice[axis]]
-
-            for idx in range(output.shape[0]):
-                tmask = np.where(t < t_cross[idx])[0]
-                output[idx,tmask] = self._rcumsum(output[idx,tmask]**2, 
-                                                  normalize = False
-                                                  )
-                output[idx, (t >= t_cross[idx]) ] = np.finfo(float).eps                
-                if self.compensate_noise:
-                    output[idx,:] += C_comp[idx]
+                output,t=self._time_trunc(output,
+                                 crop_instant=max(self.t_cross),
+                                 )
                 
-
+            for idx in range(output.shape[0]):
+                mint = min(self.t_cross)
+                output[idx,:] = self._rcumsum_crop(signal=output[idx,:]**2,
+                                                   time_vector=t,
+                                                   crop_instant=mint,
+                                                   normalize=normalize
+                                                   )
         return output
 
+    def _get_lundeby_tc(self,signal,headroom=0,axis=-1,**kwargs):
+        t_cross = lundeby_unvec(ht=signal,
+                        fs=self.fs,
+                        axis=axis,
+                        headroom=headroom,
+                        on_nonconvergence='mean',**kwargs
+                        )
+        return t_cross
+
+    def _time_trunc(self,signal,time_vector,crop_instant,axis=-1):
+        outslice = [slice(None)]*signal.ndim
+        outslice[axis] = slice(int(crop_instant*self.fs))
+        signal = signal[tuple(outslice)]
+        time_vector = time_vector[outslice[axis]]
+        return signal,time_vector
 
     @property
     def f_nominal(self,):
         return self.filter_obj.f_nominal
+
+    def _rcumsum_crop(self,signal,time_vector,crop_instant,normalize=False):
+        tmask = np.where(time_vector < crop_instant)[0]
+        signal[tmask] = self._rcumsum(signal[tmask], 
+                                            normalize = normalize
+                                            )
+        signal[(time_vector >= crop_instant) ] = np.finfo(float).eps
+        return signal
 
     def _filterSignal(self,input,band,axis=None,normalize=True,**kwargs):
         output= self.filter_obj.filter(input,axis=axis,band=band,**kwargs)
