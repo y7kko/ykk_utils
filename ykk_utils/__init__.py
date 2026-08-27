@@ -36,6 +36,6 @@ __all__ = [
             'applications'
            ]
 
-__version__ = "1.4.2"
+__version__ = "1.4.3"
 
 __author__ = 'Bruno Miyata'

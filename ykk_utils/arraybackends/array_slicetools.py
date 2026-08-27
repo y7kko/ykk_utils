@@ -55,6 +55,7 @@ class arr_split2d:
 
         self.stop_max = self.array.shape[self.slice_axis]
         self.waitbar = waitbar
+        self.wait=None
         if self.slice_axis >= self.ndim:
             raise ValueError('Algum problema em')
         # checking if step value is valid
@@ -66,9 +67,14 @@ class arr_split2d:
             self.step = int(array.shape[self.slice_axis]*self.step)
 
         print('size per batch = ',self.step)
-        if self.step >= self.stop_max:
+
+        if self.step > self.stop_max:
             warnings.warn(f'step = {self.step} but input array have size {self.stop_max} in axis {self.axis}, clipping it to maximum value')
             self.step = self.stop_max
+            self.waitbar=False
+        elif self.step == self.stop_max:
+            self.waitbar=False
+        
 
 
 
@@ -78,9 +84,10 @@ class arr_split2d:
         self.start = -self.step
         self.stop = 0
         self.iteration_end_flag = False
+        if waitbar:
+            self._waitbar_init()
 
     def __iter__(self):
-        self._waitbar_init()
         return self
     
     def __next__(self):
@@ -118,12 +125,12 @@ class arr_split2d:
 
     def _waitbar_add(self,val):
         val = int(val)
-        if self.step is not None:
+        if self.step is not None and self.waitbar:
             self.wait.update(val)
         pass
 
     def _waitbar_deinit(self):
-        if self.step is not None:
+        if self.step is not None and self.waitbar:
             self.wait.close()
         self.wait = None
 
@@ -178,12 +185,12 @@ def _autochunksize(argument:str,array,axis,expected_signal_len=None):
         signal_size = expected_signal_len
     itemsize = array.itemsize
     bytes_per_signal = int(signal_size*itemsize)
-    print(f":: autochunk: '{backend}'")
-    print(f'value {value}')
-    print(f'Numero de samples por sinal {signal_size}')
-    print(f'Memoria livre: {free_bytes/2**(20):.2f} MiB')
-    print(f'Quanto reservar: {bytes_per_signal/2**(20):.2f} MiB/sinal')
-    print(f'Memoria dedicada a operacao: {bytes_to_use/2**(20):.2f} MiB')
+    # print(f":: autochunk: '{backend}'")
+    # print(f'value {value}')
+    # print(f'Numero de samples por sinal {signal_size}')
+    # print(f'Memoria livre: {free_bytes/2**(20):.2f} MiB')
+    # print(f'Quanto reservar: {bytes_per_signal/2**(20):.2f} MiB/sinal')
+    # print(f'Memoria dedicada a operacao: {bytes_to_use/2**(20):.2f} MiB')
     slice_step = int(bytes_to_use/bytes_per_signal)
     slice_step = max(1,slice_step)
     return slice_step
