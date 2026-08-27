@@ -13,7 +13,7 @@ def delete_spines(ax:plt.Axes=None):
     if ax.name == '3d':
         _3d_spine_del(ax)
     else:
-        print('lembrar de remover spines')
+        ax.spines[['top', 'bottom', 'left', 'right']].set_visible(False)
     pass
 
 def delete_ticks(ax:plt.Axes=None):

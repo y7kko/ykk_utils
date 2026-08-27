@@ -33,6 +33,9 @@ def plot_map(dir:np.ndarray, p:np.ndarray,
         if whitexticks:        
             for label in ax.get_xticklabels():
                 label.set_color('white')
+                label.set_ha('center')
+                label.set_va('center')
+                label.set_rotation(45)
                 label.set_path_effects([
                     PathEffects.withStroke(linewidth=2, foreground='#00000077')
                 ])
