@@ -19,39 +19,36 @@ h = np.zeros([2,NFFT])
 bgn = noise(NFFT)*(16E-4)*(2**3)
 
 # Case 1: Multiexponential decay
-h[0] = bgn + noise(NFFT)*np.exp(-0.9*t) + .5*noise(NFFT)*np.exp(-1.5*t)
+h[0] = bgn + noise(NFFT)*np.exp(-1.2*t) + .5*noise(NFFT)*np.exp(-1.5*t)
 # Case 2: Perfectly exponential decay
-h[1] = bgn + noise(NFFT)*np.exp(-.4*t)
+h[1] = bgn + noise(NFFT)*np.exp(-.74*t)
 
 # plt.plot(t,dB(h**2))
 # %%
 band = 1E3
 hf = EDCalc._filterSignal(h,band)
-EDCalc.noisedetectionConfig(method='lundeby',compensatenoise=True)
-E = EDCalc.integrate(h,band,normalize=True)
-E /= abs(E).max()
-
 EDCalc.noisedetectionConfig(method='lundeby',compensatenoise=False)
-E2 = EDCalc.integrate(h,band,normalize=True)
-E2 /= abs(E2).max()
+tc = EDCalc._get_lundeby_tc(hf,headroom=0,plot_iters=True)
+E = EDCalc.integrate(h,band,normalize=True,headroom=0)
+E /= abs(E).max()
 #%%
 plt.title('Case 1: Multiexponential')
 plt.plot(t,dB(hf[0]**2),label='$h^2(t)$')
 t_e = dsp.tvec(E[0],fs)
-plt.plot(t_e,dB(E[0]),label='EDC (noise compensation)')
-plt.plot(t_e,dB(E2[0]),label='EDC (no compensation)')
+plt.plot(t_e,dB(E[0]),label='EDC ')
 plt.ylim(-80,None)
-plt.xlim(None,6)
+# plt.xlim(None,6)
+plt.axvline(tc[0],color='black',linestyle='dashed')
 plt.grid()
 plt.legend()
 #%%
 plt.title('Case 2: Perfectly Exponential')
 plt.plot(t,dB(hf[1]**2),label='$h^2(t)$')
 t_e = dsp.tvec(E[1],fs)
-plt.plot(t_e,dB(E[1]),label='EDC (noise compensation)')
-plt.plot(t_e,dB(E2[1]),label='EDC (no compensation)')
+plt.plot(t_e,dB(E[1]),label='EDC')
 plt.ylim(-80,None)
 plt.xlim(None,6)
+plt.axvline(tc[0],color='black',linestyle='dashed')
 plt.grid()
 plt.legend()
 # %%

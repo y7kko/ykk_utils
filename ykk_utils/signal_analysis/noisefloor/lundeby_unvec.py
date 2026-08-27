@@ -7,7 +7,7 @@ from ykk_utils.arraybackends import ArrayBackendManager,ArrayBackendContext
 from ykk_utils.arraybackends import array_slicetools as arrslice
 import matplotlib.pyplot as plt
 
-def lundeby_unvec(ht,fs,axis=-1,headroom=0,time_criterion=.5,maxiter=5,on_nonconvergence='raise',plot_iters=False):
+def lundeby_unvec(ht,fs,axis=-1,headroom=0,maxiter=5,on_nonconvergence='raise',plot_iters=False):
     """Detecção de cauda de ruído
 
     Args:
@@ -88,7 +88,7 @@ def lundeby_unvec(ht,fs,axis=-1,headroom=0,time_criterion=.5,maxiter=5,on_noncon
                 plt.ylim(_dB(ht_chk**2).min()-10,None)
             tcross_cache[iter+1] = t_cross
 
-            if abs(tcross_cache[iter]-tcross_cache[iter+1]) <= time_criterion:
+            if abs(tcross_cache[iter]-tcross_cache[iter+1]) <= abs(dt):
                 tc = tcross_cache[iter+1]
                 crosspoint_instant[idx] = _find_above_headroom(ht_chk,t_chk,tc,headroom)
                 break
@@ -125,7 +125,8 @@ def _find_above_headroom(ht_chk,t,tc,headroom):
                  + headroom)
     
     ht_idx = np.where(_dB(ht_chk**2)>=obj_level)[0]
-    return t[ht_idx.max()]
+    final_index = np.min([ht_idx.max(),idx])
+    return t[final_index]
 
 def _clip_to_length(indexes,vector):
     indexes = np.asarray(indexes)
