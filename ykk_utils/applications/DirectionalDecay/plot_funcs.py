@@ -11,6 +11,7 @@ from ykk_utils import dsputils
 
 
 def plot_map(EDC,d00,dir,thresh=0,clims=[-9,9],cmap='RdBu'): 
+    print('PROFUNDAMENTE ERRADO CHECAR S3 < SEGAV')
     d00 = dsputils.norm_max(abs(d00))
     EDC = dsputils.norm_max(EDC)
     thresh_idx = abs(dsputils.dB(d00)-thresh).argmin()
