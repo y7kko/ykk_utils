@@ -27,10 +27,10 @@ def complete_missing_frequencies(input_freq:np.ndarray,
     """
     # infering df
     df = input_freq[1]-input_freq[0]    
-    nfft = int(fs/df) # tamanho total do vetor que eu quero
+    nfft = int(round(fs/df)) # tamanho total do vetor que eu quero
     # metade do vetor(até nyquist)
     if (nfft % 2) == 0:
-        nfft_half = int(nfft/2)
+        nfft_half = int((nfft/2)+1)
     else:
         nfft_half = int((nfft+1)/2)
 
@@ -48,7 +48,7 @@ def complete_missing_frequencies(input_freq:np.ndarray,
     out_spk[tuple(pad_slice)] = input_spk
 
     #Impede zero absoluto (útil para quando dB)
-    out_spk[out_spk==0] = np.finfo(out_spk.dtype).tiny
+    out_spk[out_spk==0] = np.finfo(out_spk.dtype).eps
 
     return out_spk
 
@@ -80,7 +80,7 @@ def generate_frequency_vector(fs,nfft=None,df=None,input_freq=None,half_spectrum
                 df = input_freq[1]-input_freq[0]
             except:
                 raise ValueError("Apenas um dos parâmetros (df ou input_freq) deve ser fornecido")
-        nfft = int(fs/df) # tamanho total do vetor que eu quero 
+        nfft = int(round(fs/df)) # tamanho total do vetor que eu quero 
 
 
     # ((nfft-1)/nfft)*fs Evita overflow se comparado a (nfft-1)*fs/nfft
@@ -89,7 +89,7 @@ def generate_frequency_vector(fs,nfft=None,df=None,input_freq=None,half_spectrum
     # Caso eu queira f = [0 : nyquist]
     if half_spectrum:
         if (nfft % 2) == 0:
-            nfft_half = int(nfft/2)
+            nfft_half = int((nfft/2)+1)
         else:
             nfft_half = int((nfft+1)/2)
 
@@ -168,7 +168,7 @@ def ifft_trunc(input_spk,freq,fs:int,normalize:bool=False,axis:int=-1,backend:st
 
     for lims, chunk in arrslice.arr_split2d(input_spk, chunk_size, 
                                             axis=axis, waitbar=True,
-                                            expected_signal_len=out_t.shape[axis]):
+                                            expected_signal_len=out_t.shape[axis]*2):
         idxs = arrslice.cross_slice2d(out_t.ndim, lims[0],lims[1],axis=axis)
 
         if input_is_unidimensional:
