@@ -122,7 +122,7 @@ def generate_time_vector(data,fs):
 
 
 def ifft_trunc(input_spk,freq,fs:int,normalize:bool=False,axis:int=-1,backend:str='numpy',
-               chunk_size=None,freqwin:bool=True,winmult:float=1.5):
+               chunk_size=None,freqwin:bool=True,winmult:float=1.5,keepdims=False):
     """Realiza a ifft de um espectro truncado.
     À parte não definida pelo sinal de entrada, são atribuidos zeros.
 
@@ -144,13 +144,8 @@ def ifft_trunc(input_spk,freq,fs:int,normalize:bool=False,axis:int=-1,backend:st
     Returns:
         ndarray: A matriz do sinal no tempo
     """
-    input_is_unidimensional = False
-    if input_spk.ndim == 1:
-        input_is_unidimensional = True
-        input_spk = input_spk[np.newaxis,:]
-        if backend != 'numpy':
-            warnings.warn('Processar sinais unidimensionais com backends diferentes de "numpy" apresentam redução na performance, alterando para backend="numpy"')
-            backend='numpy'
+
+    input_spk = np.atleast_2d(input_spk)
     
 
     full_freq = generate_frequency_vector(fs=fs,input_freq=freq,half_spectrum=True)
@@ -171,13 +166,11 @@ def ifft_trunc(input_spk,freq,fs:int,normalize:bool=False,axis:int=-1,backend:st
                                             expected_signal_len=out_t.shape[axis]*2):
         idxs = arrslice.cross_slice2d(out_t.ndim, lims[0],lims[1],axis=axis)
 
-        if input_is_unidimensional:
-            spk_padd = complete_missing_frequencies(input_freq=freq, input_spk=chunk, fs=fs)
-        else:
-            spk_padd = complete_missing_frequencies(input_freq = freq,
-                                                input_spk = chunk,
-                                                fs = fs, axis=axis
-                                                )
+
+        spk_padd = complete_missing_frequencies(input_freq = freq,
+                                            input_spk = chunk,
+                                            fs = fs, axis=axis
+                                            )
         with ArrayBackendContext(backend) as yp:
             spk_bcknd = yp.to_backend(spk_padd)
             # print(spk_bcknd.shape)
@@ -188,13 +181,13 @@ def ifft_trunc(input_spk,freq,fs:int,normalize:bool=False,axis:int=-1,backend:st
         yp = ArrayBackendManager('numpy').get_backend()
         out_t = yp.norm_max(out_t,axis=axis) 
 
-    if input_is_unidimensional:
+    if not keepdims:
         out_t = out_t.squeeze()   
     return out_t
 
 
 def rfft(input_t,axis:int=-1,backend:str='numpy',
-               chunk_size=None):
+               chunk_size=None,keepdims=False):
     """Realiza a ifft de um espectro truncado.
     À parte não definida pelo sinal de entrada, são atribuidos zeros.
 
@@ -216,13 +209,7 @@ def rfft(input_t,axis:int=-1,backend:str='numpy',
     Returns:
         ndarray: A matriz do sinal no tempo
     """
-    input_is_unidimensional = False
-    if input_t.ndim == 1:
-        input_is_unidimensional = True
-        input_t = input_t[np.newaxis,:]
-        if backend != 'numpy':
-            warnings.warn('Processar sinais unidimensionais com backends diferentes de "numpy" apresentam redução na performance, alterando para backend="numpy"')
-            backend='numpy'
+    input_t = np.atleast_2d(input_t)
 
     if input_t.shape[axis]%2 ==0:
         N_half = (input_t.shape[axis]/2)+1
@@ -243,7 +230,7 @@ def rfft(input_t,axis:int=-1,backend:str='numpy',
             chk_spk = yp.rfft(ht_bcknd, axis=axis)
             out_t[idxs] = yp.to_numpy(chk_spk) # casts backend type into ndarray
 
-    if input_is_unidimensional:
+    if not keepdims:
         out_t = out_t.squeeze()   
     return out_t
 
