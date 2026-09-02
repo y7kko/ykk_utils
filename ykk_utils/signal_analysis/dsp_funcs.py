@@ -325,10 +325,10 @@ def _generate_freqwindow(freq,mult=2):
     """Dado um vetor de frequências truncado, computar uma
     janela híbrida para prevenir fenômeno de gibbs. A janela
     possui formato:
-        ```
-          /-------\
-         /         \
-        /           \
+        
+          /-------\\
+         /         \\
+        /           \\
         .  .      .  .
         p1 p2     p3  p4
         ``` 
@@ -336,7 +336,7 @@ def _generate_freqwindow(freq,mult=2):
         - p2 = p1*mult
         - p3 = max(freq)/mult
         - p4 = max(freq)
-        ```
+        
 
     Args:
         freq (ndarray): vetor contendo as frequências em que o espectro está
