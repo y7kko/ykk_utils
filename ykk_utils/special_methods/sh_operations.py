@@ -1,32 +1,13 @@
 """
 Funções que calculam grandezas no espectro de esféricos harmônicos
 """
+import warnings
 import numpy as np
+from functools import wraps
 
 
-def isotropy(Amn,N=None):
-    """Dado um vetor Amn, calcula a isotropia do négocio
 
-    Baseado no artigo da Nolan lá
-    Args:
-        Amn (_type_): _description_
-        N (_type_, optional): _description_. Defaults to None.
-
-    Returns:
-        float: Coeficiente de isotropia do espectro de esféricos harmônicos
-    """
-    if N is None:
-        N = int(np.sqrt(len(Amn)) - 1)
-
-    Amn_sum = np.zeros(N+1)
-    counter = 0
-    for n in range(0,N+1):
-        for m in range(-n,n+1):
-            Amn_sum[n] += np.abs(Amn[counter])
-            counter+=1
-    return (Amn_sum[0])/np.sum(Amn_sum)
-
-def isotropy_vectorized(Amn,axis=-1):
+def isotropy(Amn,axis=-1):
     """Dado um vetor Amn, calcula a isotropia do négocio
 
     Baseado no artigo da Nolan lá
@@ -40,6 +21,8 @@ def isotropy_vectorized(Amn,axis=-1):
 
     nm_axis = int(not axis)
     i = np.zeros(Amn.shape[axis])
+
+    # num_slice [0,:] considerando shape [(N+1)^2,T]
     num_slice = [slice(None)]*Amn.ndim
     num_slice[nm_axis] = 0 
 
@@ -47,3 +30,10 @@ def isotropy_vectorized(Amn,axis=-1):
     den = abs(Amn).sum(axis = nm_axis)
     i = num/den
     return i
+
+
+
+@wraps(isotropy)
+def isotropy_vectorized(*args,**kwargs):
+    warnings.warn('Prefira `isotropy`')
+    return isotropy(*args,**kwargs)

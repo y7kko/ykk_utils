@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from ykk_utils.signal_analysis import dsp_funcs as dsp
-from ykk_utils.special_methods.SHMatrix import SHMatrixProcessor
+from ykk_utils.special_methods.SHMatrix import SHExpander
 from ykk_utils import ykplot
 from ykk_utils import dsputils
 # import os
@@ -27,7 +27,7 @@ def plot_map(EDC,d00,dir,thresh=0,clims=[-9,9],cmap='RdBu'):
     plt.colorbar(map,label=r'$10 \log_{10}\left(d(t,\theta,\phi)/|d_{00}(t)|\right)$')
 
 
-def nm_specgram(SHinstance:SHMatrixProcessor,t_sh=None,
+def nm_specgram(SHinstance:SHExpander,t_sh=None,
                 fs=None,x_is_dB=True,clims=[-15,0]):
     shp = SHinstance
     nmmap = shp.nmmap # Par (n,m)

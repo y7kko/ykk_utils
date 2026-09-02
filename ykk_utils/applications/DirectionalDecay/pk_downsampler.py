@@ -1,4 +1,4 @@
-from ykk_utils.special_methods.SHMatrix import SHMatrixProcessor
+from ykk_utils.special_methods.SHMatrix import SHExpander
 from tessellation import SphereTessellator
 
 
@@ -18,7 +18,7 @@ def pk_downsampler(dir,pk,nverts=642,Nmax=30,
         dir, pk: _description_
     """
     shp = (
-        SHMatrixProcessor(dir=dir,pk_mtx=pk)
+        SHExpander(dir=dir,pk_mtx=pk)
         .generate_kernel(Nmax)
         .decompose(backend   = backend, 
                     chunksize = chunksize

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from ykk_utils.file_management.colab_tools import colabrw as rwops
 from ykk_utils.signal_analysis import dsp_funcs as dsp
-from ykk_utils.special_methods.SHMatrix import SHMatrixProcessor
+from ykk_utils.special_methods.SHMatrix import SHExpander
 from ykk_utils import EnergyDecayCalculator
 from ykk_utils.tools.SmallScripts import audio
 # from tessellation import SphereTessellator

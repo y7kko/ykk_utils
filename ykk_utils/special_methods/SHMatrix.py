@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from . import sh_ft, sh_operations
 from ..signal_analysis import dsp_funcs
@@ -5,21 +6,23 @@ from tqdm import tqdm
 from ykk_utils.tools.waitbar import tqdm_flush
 from ykk_utils.arraybackends import ArrayBackendContext, ArrayBackendManager
 from ykk_utils.arraybackends import arr_split2d,cross_slice2d
-class SHMatrixProcessor:
-    def __init__(self, pk_mtx, dir):
+
+class SHExpander:
+    def __init__(self, dir,signal_mtx=None,pk_mtx=None):
         """Uma classe que recebe uma matriz de pressões variando de
         acordo com a frequência, definidas em uma esfera, e realiza a
         decomposição em ondas planas da matriz.
 
         Args:
-            pk_mtx (ndarray): Matriz de pressões com shape (n_dir, freq)
+            signal_mtx (ndarray): Matriz de pressões com shape (n_dir, freq)
             dir (ndarray): Matriz de coordenadas(cartesianas) com shape (n_dir, 3)
-            ---
-            Não lembro qual o motivo de eu declarar isso... Por enquanto não foi usado
-            pk_freq (ndarray): Vetor de frequências de shape (freq)
-            fs (float): Frequência de amostragem
         """
-        self.pk_mtx = pk_mtx
+        if (signal_mtx is None) and (pk_mtx is None):
+            raise TypeError('No input signal in `SHExpander`')
+        if not (pk_mtx is None):
+            warnings.warn("A palavra chave `pk_mtx` está depreciada e eventualmente será excluida. Prefira `signal_mtx`.")
+            signal_mtx = pk_mtx
+        self.signal_mtx = signal_mtx
         
         self.dir = dir
         # Converter em dir coordenadas esféricas
@@ -31,7 +34,7 @@ class SHMatrixProcessor:
 
         self.kernel_is_complex = False
         self.input_is_complex = False
-        if pk_mtx.dtype is complex:
+        if signal_mtx.dtype is complex:
             self.input_is_complex = True
     
 
@@ -72,24 +75,22 @@ class SHMatrixProcessor:
         """
         if not hasattr(self,'Ydecomp'):
             raise ValueError("Kernel não inicializado, utilize generate_kernel()")
-        n_dirs  = self.pk_mtx.shape[0]
-        n_samples = self.pk_mtx.shape[1]
+        n_dirs  = self.signal_mtx.shape[0]
+        n_samples = self.signal_mtx.shape[1]
 
         n_degordr = (self.Nmax+1)**2
-
-        if (self.Ydecomp.dtype is complex) or (self.pk_mtx.dtype is complex):
-            solution = np.zeros([n_degordr, n_samples],dtype=self.Ydecomp.dtype)
+        if any([np.iscomplexobj(arr) for arr in [self.Ydecomp,self.signal_mtx]]):
+            solution = np.zeros([n_degordr, n_samples],dtype=complex)
         else:
             solution = np.zeros([n_degordr, n_samples],dtype=float)
             
-
 
         _kernel = (ArrayBackendManager(backend)
                    .get_backend() #necessáro apenas pra manter docstring
                    .to_backend(self.Ydecomp, keep_reference=False)
                    )
 
-        for lims,chk in arr_split2d(self.pk_mtx,
+        for lims,chk in arr_split2d(self.signal_mtx,
                                     chunksize,axis=0,
                                     expected_signal_len=len(_kernel.flatten()) #not true, mas mais realista
                                     ):
@@ -180,7 +181,7 @@ class nmIndexer:
         SHMatrixProcessor.nm[0,0] #retorna A00(f)
     """
     def __init__(self,parent):
-        self.parent:SHMatrixProcessor = parent
+        self.parent:SHExpander = parent
 
 
     def __getitem__(self, key):
@@ -200,3 +201,12 @@ class nmIndexer:
         n,m = key
         idx = self.parent._nm2idx(n,m)
         self.parent.SH_decomp[idx,:] = value
+
+class SHMatrixProcessor(SHExpander):
+    def __init__(self,*args,**kwargs):
+        warnings.warn(
+                "A classe 'SHMatrixProcessor' mudou de nome para. SHExpander",
+                DeprecationWarning,
+                stacklevel=2
+            )
+        super().__init__(*args, **kwargs)
