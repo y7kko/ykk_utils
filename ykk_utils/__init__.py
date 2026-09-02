@@ -3,7 +3,6 @@ from . import arraybackends
 
 from .signal_analysis import dsputils, dsp_funcs
 from .signal_analysis.FilterBank import FilterBank
-from .signal_analysis.EnergyDecayCalculator import EnergyDecayCalculator
 
 from .file_management.GlobalWorkspace import GlobalWorkspace
 from .file_management import colab_tools
@@ -15,7 +14,10 @@ from .signal_analysis import error_funcs
 
 from . import ykplot
 from . import applications
+from . import special_methods
 
+
+from .signal_analysis.EnergyDecayCalculator import EnergyDecayCalculator
 __all__ = [
            'OctaveBands',
            'ThirdOctaveBands',
@@ -33,9 +35,10 @@ __all__ = [
             'dsp_funcs'
             'arraybackends',
             'tools',
-            'applications'
+            'applications',
+            'special_methods',
            ]
 
-__version__ = "1.5.2"
+__version__ = "1.5.3"
 
 __author__ = 'Bruno Miyata'
