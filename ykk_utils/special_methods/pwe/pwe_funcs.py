@@ -5,15 +5,20 @@ from ykk_utils.arraybackends.array_slicetools import arr_split2d,cross_slice2d
 from ykk_utils.arraybackends import ArrayBackendContext,ArrayBackendManager
 
 
-def get_kernel(coord,k0,directions,normal=None):
+def get_kernel(coord,k0,directions,normal=None,keepdims=True):
     if normal is None:
-        return H_kernel(coord,k0,directions)
+        Kernel = H_kernel(coord,k0,directions)
     else:
         axis = _parse_normal_arg(normal)
-        return dHdn_kernel(coord,k0,directions,axis)
+        Kernel = dHdn_kernel(coord,k0,directions,axis)
+
+    if keepdims:
+        return Kernel
+    else:
+        return Kernel.squeeze()
 
 
-def H_kernel(coord,k0,directions):
+def H_kernel(coord,k0,directions,) -> np.ndarray:
     """Computes plane wave expansion Kernel for 
     pressure reconstruction.
 
@@ -25,11 +30,12 @@ def H_kernel(coord,k0,directions):
     Returns:
         _type_: _description_
     """
-    # k_p = k0[...,np.newaxis,np.newaxis]*directions
-    k_p = k0 * directions
-    return np.exp(-1j*coord @ k_p.T)
+    k_p = k0[...,np.newaxis,np.newaxis]*directions
+    exp_arg = np.einsum('ij,lkj->lik',-1j*coord,k_p) #(M,3) * k (3,n) ->k M,N
+    H = np.exp(exp_arg) # k M,N
+    return H
 
-def dHdn_kernel(coord,k0,directions,axis):
+def dHdn_kernel(coord,k0,directions,axis) -> np.ndarray:
     """Computes plane wave expansion Kernel 
     derivative with respect of axis
 
@@ -42,10 +48,12 @@ def dHdn_kernel(coord,k0,directions,axis):
     Returns:
         _type_: _description_
     """
-    k_p = k0 * directions[:,axis]
-    return np.exp(-1j*coord[:,axis] @ k_p.T)
+    k_p = k0[...,np.newaxis]*directions[:,axis]
+    exp_arg = np.einsum('ij,lkj->lik',-1j*coord[:,axis],k_p) #(M,1) * k (1,n) ->k M,N
+    H = np.exp(exp_arg) # k M,N
+    return H
 
-def _parse_normal_arg(normal_arg):
+def _parse_normal_arg(normal_arg) -> int:
     """Converts normal argument into expected axis convention
 
     Examples:
