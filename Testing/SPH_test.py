@@ -1,7 +1,7 @@
 #%%
 import numpy as np
 # import matplotlib.pyplot as plt
-from ykk_utils.special_methods import sh_ft
+from ykk_utils.special_methods.spherical import sh_ft
 
 #%%
 (l,m) = (0,0)

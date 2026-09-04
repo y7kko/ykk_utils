@@ -1,6 +1,8 @@
 from .PWDecompReproject import PWDecompReproj
-from . import sh_ft
-from . import sh_operations
+from .spherical import sh_ft
+from .spherical import sh_operations
 from .SHMatrix import SHExpander,SHMatrixProcessor
 
-from .sh_operations import isotropy
+from .spherical.sh_operations import isotropy
+
+from . import PWE

@@ -1,11 +1,11 @@
 import warnings
 import numpy as np
-from . import sh_ft, sh_operations
-from ..signal_analysis import dsp_funcs
 from tqdm import tqdm
-from ykk_utils.tools.waitbar import tqdm_flush
 from ykk_utils.arraybackends import ArrayBackendContext, ArrayBackendManager
 from ykk_utils.arraybackends import arr_split2d,cross_slice2d
+
+from .spherical import cart2sph
+from .spherical import generate_Y_kernel,get_nm_map
 
 class SHExpander:
     def __init__(self, dir,signal_mtx=None,pk_mtx=None):
@@ -26,7 +26,7 @@ class SHExpander:
         
         self.dir = dir
         # Converter em dir coordenadas esféricas
-        self.azm, self.elv, _ = sh_ft.cart2sph(
+        self.azm, self.elv, _ = cart2sph(
             x = self.dir[:,0],
             y = self.dir[:,1],
             z = self.dir[:,2]
@@ -49,13 +49,13 @@ class SHExpander:
             self: Retorna a si mesmo, para encadeamento de funções
         """
         self.Nmax = Nmax
-        self.Ydecomp =  sh_ft.generate_Y_kernel(azm=self.azm,
+        self.Ydecomp =  generate_Y_kernel(azm=self.azm,
                                                 elv=self.elv,
                                                 N=Nmax,
                                                 dtype=dtype
                                                 )
         self.condition = np.linalg.cond(self.Ydecomp)
-        self.nmmap = sh_ft.get_nm_map(N = Nmax)
+        self.nmmap = get_nm_map(N = Nmax)
         if logging:
             print(f':: Spherical harmonics decomposition Kernel')
             print(f'condition number = {self.condition:.3f}')
@@ -122,8 +122,8 @@ class SHExpander:
             i_end = (Nmax+1)**2
 
         #::: Criação da base
-        az, el, _ = sh_ft.cart2sph(dir[:,0],dir[:,1],dir[:,2])
-        Yprojct = sh_ft.generate_Y_kernel(azm = az,
+        az, el, _ = cart2sph(dir[:,0],dir[:,1],dir[:,2])
+        Yprojct = generate_Y_kernel(azm = az,
                                           elv = el,
                                           N = Nmax,
                                           dtype = complex
@@ -201,6 +201,7 @@ class nmIndexer:
         n,m = key
         idx = self.parent._nm2idx(n,m)
         self.parent.SH_decomp[idx,:] = value
+
 
 class SHMatrixProcessor(SHExpander):
     def __init__(self,*args,**kwargs):
