@@ -63,8 +63,16 @@ class colabrw():
             'receivers':receivers, 
             'freq' : file['freq'][:], 
             'p_mtx':file['p_mtx'][:],
-            'fs': file['fs']
+            'fs': file['fs'],
+
         }
+        try:
+            output_data['temp'] = file['temp']
+            output_data['hum']= file['hum']*100
+        except:
+            output_data['temp'] = 20.0
+            output_data['hum']= 50.0
+
         return output_data
     
     @staticmethod
