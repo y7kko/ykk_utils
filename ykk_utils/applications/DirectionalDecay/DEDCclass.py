@@ -2,16 +2,11 @@
 Classe dedicada a calcular a EDC de um sinal. 
 """
 import numpy as np
-from scipy.signal import savgol_filter
-from tqdm import tqdm
-
 from ykk_utils.arraybackends import ArrayBackendManager, ArrayBackendContext
 from ykk_utils.arraybackends import array_slicetools as arrslice
-from ykk_utils.tools.waitbar import tqdm_flush
 from ykk_utils.signal_analysis import dsp_funcs as dsp
+from ykk_utils.signal_analysis import dsputils as dspu
 from ykk_utils import FilterBank
-from ykk_utils.signal_analysis import RT_funcs as TR
-# from ykk_utils.signal_analysis.noisefloor.lundeby_unvectorized import lundeby_unvec
 from ykk_utils.signal_analysis.noisefloor.lundeby_unvec import lundeby_unvec
 
 import warnings
@@ -128,8 +123,12 @@ class DEDCCalculator:
             output /= abs(output).max(axis=axis,keepdims=True)
         return output
     
-    def _rcumsum(self,input,**kwargs):
-        return TR.rcumsum(input,**kwargs)
+    def _rcumsum(self,input,axis=-1,normalize=False):
+        with ArrayBackendContext('numpy') as yp:
+            output= yp.rcumsum(input,axis=axis)
+        if normalize:
+            output=dspu.norm_max(output,axis=axis)
+        return output
 
 
 DEDCCalculator.filterConfig.__doc__ = FilterBank.__init__.__doc__
