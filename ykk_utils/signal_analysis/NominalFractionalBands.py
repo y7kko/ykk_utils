@@ -1,26 +1,54 @@
 import numpy as np
 import os
 
-_oct_center_freqs = None
-_oct_minmax_freqs = None
-_thrd_center_freqs = None
-_thrd_minmax_freqs = None
-
-
-def _load_file(filename):
-    """Carrega um arquivo .csv no subfolder 'data/'
-
-    Args:
-        filename (str): _description_
-
-    Returns:
-        np.ndarray: O vetor contido no .csv
-    """
-    module_dir = os.path.dirname(__file__)
-    path= os.path.join(module_dir,'ISO3_banddata',filename)
-    return np.loadtxt(path,delimiter=',')
+_oct_center_freqs = np.array([16, 31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000])
+_oct_minmax_freqs = np.array([[11.0, 22.1],
+                              [22.1, 44.2],
+                              [44.2, 88.4],
+                              [88.4, 176.8],
+                              [176.8, 353.6],
+                              [353.6, 707.1],
+                              [707.1, 1414.2],
+                              [1412.2, 2828.4],
+                              [2828.4, 5656.9],
+                              [5656.9, 11313.7],
+                              [11313.7, 22627.4]]
+)
+_thrd_center_freqs = np.array([16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000,])
+_thrd_minmax_freqs = np.array([
+                                [13.9, 17.5],
+                                [17.5, 22.1],
+                                [22.1, 27.8],
+                                [27.8, 35.1],
+                                [35.1, 44.2],
+                                [44.2, 55.7],
+                                [55.7, 70.2],
+                                [70.2, 88.4],
+                                [88.4, 111.4],
+                                [111.4, 140.3],
+                                [140.3, 176.8],
+                                [176.8, 222.7],
+                                [222.7, 280.6],
+                                [280.6, 353.6],
+                                [356.6, 445.4],
+                                [445.4, 561.2],
+                                [561.2, 707.1],
+                                [707.1, 890.9],
+                                [890.9, 1122.5],
+                                [1122.5, 1414.2],
+                                [1414.2, 1781.8],
+                                [1781.8, 2244.9],
+                                [2244.9, 2828.4],
+                                [2828.4, 3563.6],
+                                [3563.6, 4489.8],
+                                [4489.8, 5656.9],
+                                [5656.9, 7127.2],
+                                [7127.2, 8979.7],
+                                [8979.7, 11313.7],
+                                [11313.7, 14254.4],
+                                [14254.4, 17959.4],
+                                [17959.4, 22627.4]])
     
-
 class OctaveBands:
     @staticmethod
     def center_freqs(freq_lims=[None,None]): #Faz caching a nivel de modulo
@@ -35,8 +63,6 @@ class OctaveBands:
         """
 
         global _oct_center_freqs
-        if _oct_center_freqs is None:
-            _oct_center_freqs = _load_file('oct.csv')
             
         if freq_lims[0] is None:
             freq_lims[0] = 0
@@ -49,7 +75,7 @@ class OctaveBands:
         return _oct_center_freqs[idx_lim]
 
     @staticmethod
-    def minmax_freqs(): #Faz caching a nivel de modulo
+    def minmax_freqs(freq_lims=[None,None]): #Faz caching a nivel de modulo
         """Retorna as frequências mínimas e máximas que correspondem a cada banda de terço de oitava 
         no intervalo especificado.
 
@@ -61,10 +87,12 @@ class OctaveBands:
         """
 
         global _oct_minmax_freqs
+        global _oct_center_freqs
+        idx_lim = np.where((_oct_center_freqs >= freq_lims[0]) & 
+                        (_oct_center_freqs <= freq_lims[1])
+                        )[0]
 
-        if _oct_minmax_freqs is None:
-            _oct_minmax_freqs = _load_file('oct_minmax.csv')
-        return _oct_minmax_freqs
+        return _oct_minmax_freqs[idx_lim]
     
     @staticmethod
     def get_band(freq=1000):
@@ -99,8 +127,6 @@ class ThirdOctaveBands:
             np.ndarray: Um array com as frequências centrais de cada banda. 
         """
         global _thrd_center_freqs
-        if _thrd_center_freqs is None:
-            _thrd_center_freqs = _load_file('third_oct.csv')
 
         
         if freq_lims[0] is None:
@@ -125,8 +151,6 @@ class ThirdOctaveBands:
             np.ndarray: Array [n_bands, 2] contendo os limites da banda
         """
         global _thrd_minmax_freqs
-        if _thrd_minmax_freqs is None:
-            _thrd_minmax_freqs = _load_file('third_oct_minmax.csv')
 
                
         if freq_lims[0] is None:
