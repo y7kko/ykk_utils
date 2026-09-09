@@ -7,8 +7,6 @@ from .signal_analysis.FilterBank import FilterBank
 from .file_management.GlobalWorkspace import GlobalWorkspace
 from .file_management import colab_tools
 
-from .plot.PlottingLayouts import PlottingLayouts
-
 from .signal_analysis.NominalFractionalBands import OctaveBands,ThirdOctaveBands
 from .signal_analysis import error_funcs
 
@@ -42,6 +40,6 @@ __all__ = [
             'special_methods',
            ]
 
-__version__ = "1.8.1"
+__version__ = "1.8.2"
 
 __author__ = 'Bruno Miyata'

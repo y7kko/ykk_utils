@@ -2,14 +2,32 @@
 ao calculo do Tempo de Reverberação
 """
 import numpy as np
-from typing import overload
+from functools import wraps
+from ykk_utils.arraybackends import ArrayBackendContext
+from ykk_utils.signal_analysis import dsputils as dspu
 
 
-def rcumsum(ir:np.ndarray,axis=-1,normalize=False):
-    output = np.cumsum(np.flip(ir,axis=axis), axis=axis)
-    output = np.flip(output, axis=axis) 
+def rcumsum(signal:np.ndarray,axis=-1,normalize=False):
+    """Performs a reverse cumulative integral in an array of
+    signals. In context of acoustics, this procedure is also
+    known as Schroeder Integration when applied to an squared
+    impulse response, therefore, `schroeder` is an avliable alias 
+    for `rcumsum`.
+
+    Args:
+        signal (np.ndarray): The signal which to perform the
+        reverse cumulative integration.
+        axis (int, optional): Axis which to perform the integration. Defaults to -1.
+        normalize (bool, optional): If True, normalize each signal by its maximum,
+        removing the steady state energy offset from the curve. Defaults to False.
+
+    Returns:
+        ndarray: An array of signals
+    """
+    with ArrayBackendContext('numpy') as yp:
+        output = yp.rcumsum(signal,axis=axis)
     if normalize:
-        output/= np.max(abs(output), axis=axis, keepdims=True)
+        output = dspu.norm_max(output,axis=axis)
     return output
 
 #Computar o T20,T30, EDT
@@ -40,7 +58,7 @@ def tr_fit(in_sig, in_t, Ldecay=20, Lstart = None,init_time=None,dB_input=True):
             f(t) = a*t + b
     """
     if not dB_input:
-        in_sig = 10*np.log10(in_sig**2)
+        in_sig = 20*np.log10(in_sig)
     if init_time is None: #TR
         if Lstart == None:
             Lstart = -5
@@ -72,4 +90,6 @@ def tr_extrapolate(a,b,L = 60):
     """
     return ( (-L) - b) / a
 
-
+@wraps(rcumsum)
+def schroeder(*args,**kwargs):
+    return rcumsum(*args,**kwargs)
