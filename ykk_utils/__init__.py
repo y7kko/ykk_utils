@@ -40,6 +40,6 @@ __all__ = [
             'special_methods',
            ]
 
-__version__ = "1.8.2"
+__version__ = "1.8.3"
 
 __author__ = 'Bruno Miyata'
