@@ -3,18 +3,58 @@ from . import RT_core
 from ykk_utils.arraybackends import cross_slice2d
 
 def T20(edc,time,axis=-1):
-    n_meas = edc.shape[not axis]
-    TR_arr = np.zeros(n_meas)
-    for idx in len(n_meas):
-        a,b = RT_core.tr_fit(edc,time,Ldecay=20,Lstart=-5)
-        TR_arr[idx] = RT_core.tr_extrapolate(a,b)
-    return TR_arr
+    """Calculates T20 of an array of impulse responses.
+    This algorithm assumes that the input is in decibels
+    and doesn't include steady state energy part of EDC.
+    Therefore, it is necessary to normalize each signal
+    by its maximum before calling this function.
+
+    Args:
+        edc (ndarray): Array of normaliezd energy decay 
+        curves in decibels.
+        time (ndarray): Time vector
+        axis (int, optional): time axis. Defaults to -1.
+
+    Returns:
+        ndarray: Array of reverberation times
+    """
+    return _Tn(edc,time,decayLevel=20,axis=axis)
+
 
 def T30(edc,time,axis=-1):
+    """Calculates T30 of an array of impulse responses.
+    This algorithm assumes that the input is in decibels
+    and doesn't include steady state energy part of EDC.
+    Therefore, it is necessary to normalize each signal
+    by its maximum before calling this function.
+
+    Args:
+        edc (ndarray): Array of normaliezd energy decay 
+        curves in decibels.
+        time (ndarray): Time vector
+        axis (int, optional): time axis. Defaults to -1.
+
+    Returns:
+        ndarray: Array of reverberation times
+    """
+    return _Tn(edc,time,decayLevel=30,axis=axis)
+
+def _Tn(edc,time,decayLevel,axis=-1,):
+    """Performs the reverberation time pipeline in each 
+    signal. This local function uses conventions proposed 
+    by ISO 3382-1:2009, thus, it's not applicable to determination
+    of EDT, for example.
+    """
+    edc = np.atleast_2d(edc)
     n_meas = edc.shape[not axis]
     TR_arr = np.zeros(n_meas)
-    for idx in len(n_meas):
-        a,b = RT_core.tr_fit(edc,time,Ldecay=30,Lstart=-5)
+    for idx in range(n_meas):
+        selector = [slice(None)]*edc.ndim
+        selector[not axis] = idx
+        a,b = RT_core.tr_fit(edc[tuple(selector)],time,
+                             Ldecay=decayLevel,
+                             Lstart=-5
+                             )
         TR_arr[idx] = RT_core.tr_extrapolate(a,b)
     return TR_arr
 

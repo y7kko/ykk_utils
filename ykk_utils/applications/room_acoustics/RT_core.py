@@ -58,7 +58,7 @@ def tr_fit(in_sig, in_t, Ldecay=20, Lstart = None,init_time=None,dB_input=True):
             f(t) = a*t + b
     """
     if not dB_input:
-        in_sig = 20*np.log10(in_sig)
+        in_sig = 10*np.log10(in_sig)
     if init_time is None: #TR
         if Lstart == None:
             Lstart = -5
