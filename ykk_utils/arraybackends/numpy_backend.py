@@ -54,6 +54,12 @@ class numpy_backend(ArrayBackendBase):
             kwargs['axes'] = kwargs.pop('axis')
         return fftconvolve(*args,**kwargs)
 
+    @keep_reference
+    def rcumsum(cls,arr,axis=-1):
+        output = np.cumsum(np.flip(arr,axis=axis), axis=axis)
+        output = np.flip(output, axis=axis)
+        return output
+
 
     def chunk_split2d(input,chk_size,axis=-1,discard_padded=False):
         in_len = input.shape[axis]

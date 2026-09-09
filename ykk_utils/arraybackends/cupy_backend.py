@@ -103,6 +103,12 @@ class cupy_backend(ArrayBackendBase):
             kwargs['axes'] = kwargs.pop('axis')
         return fftconvolve(*args,**kwargs)
 
+    @keep_reference
+    def rcumsum(cls,arr,axis=-1):
+        output = cp.cumsum(cp.flip(arr,axis=axis), axis=axis)
+        output = cp.flip(output, axis=axis)
+        return output
+
     @classmethod
     def free_mem(cls,arr:cp.ndarray):
         cls.reflist_remove(arr)
