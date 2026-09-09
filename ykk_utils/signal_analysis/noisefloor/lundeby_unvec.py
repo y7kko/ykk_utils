@@ -88,7 +88,8 @@ def lundeby_unvec(ht,fs,axis=-1,headroom=0,maxiter=5,on_nonconvergence='raise',p
                 plt.ylim(_dB(ht_chk**2).min()-10,None)
             tcross_cache[iter+1] = t_cross
 
-            if abs(tcross_cache[iter]-tcross_cache[iter+1]) <= abs(dt):
+            #loose convergence criterion, as the method
+            if abs(tcross_cache[iter]-tcross_cache[iter+1]) <= 2*abs(dt):
                 tc = tcross_cache[iter+1]
                 crosspoint_instant[idx] = _find_above_headroom(ht_chk,t_chk,tc,headroom)
                 break
