@@ -416,9 +416,7 @@ def modified_kurtosis(signal, block_sizes=[4,64],axis=-1):
 
         var_l = np.nanmean((sig_chk_l-chk_mean_l)**2, axis=axis, keepdims=True) #n,
 
-        output[tuple(out_indexer)] = ((
-            (chk_mean_s - chk_mean_l)**4 / var_l
-            )**2).squeeze()
+        output[tuple(out_indexer)] = ((chk_mean_s - chk_mean_l)**4/ var_l**2).squeeze()
 
     output = np.nan_to_num(output,nan=0)
     return output.squeeze()
