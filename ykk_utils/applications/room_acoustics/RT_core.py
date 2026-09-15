@@ -62,13 +62,13 @@ def tr_fit(in_sig, in_t, Ldecay=20, Lstart = None,init_time=None,dB_input=True):
     if init_time is None: #TR
         if Lstart == None:
             Lstart = -5
-        end = Lstart - Ldecay
+        Lend = Lstart - Ldecay
 
-        t_idx = np.where((in_sig<=Lstart) & (in_sig>=end))[0]
+        t_idx = np.where((in_sig<=Lstart) & (in_sig>=Lend))[0]
     else: #EDT ou algo assim
         t_start_idx = np.where(in_t>=init_time)[0]
-        end = - Ldecay
-        t_idx = np.where(in_sig >= end)[0]
+        Lend = - Ldecay
+        t_idx = np.where(in_sig >= Lend)[0]
         t_idx = np.intersect1d(t_start_idx,t_idx)
 
     a, b = np.polyfit(in_t[t_idx], in_sig[t_idx], 1)
